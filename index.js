@@ -1,7 +1,7 @@
 import express from "express"
 import cookieParser from "cookie-parser"
 import morgan from "morgan"
-import AuthenticationRoutes from "./routes/AuthenticationRoutes/index.js";
+import AuthenticationRoutes from "./routes/AuthenticationRoutes.js";
 
 const app = express();
 app.use(express.json());
