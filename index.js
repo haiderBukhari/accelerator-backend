@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser"
 import morgan from "morgan"
 import AuthenticationRoutes from "./routes/AuthenticationRoutes.js";
 import cors from "cors"
+import OtpRoutes from "./routes/SendOtpRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/api/auth', AuthenticationRoutes)
+app.use('/api/otp', OtpRoutes)
 
 app.get('*', (req, res)=>{
     res.send('Server is connected successfully');

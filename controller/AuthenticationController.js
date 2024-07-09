@@ -45,7 +45,7 @@ export const loginUser = async (req, res) => {
         console.log(isMatch)
         if(!isMatch) throw new Error("Invalid credentials.");
         res.cookie("id", user._id, {maxAge: 60000 * 60 * 24 * 10});
-        res.status(200).json({message: "User logged in successfully.", id: user._id});
+        res.status(200).json({message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail});
     }catch(err){
         throwError(res, 400, err.message);
     }
@@ -57,6 +57,18 @@ export const addRecoveryEmail = async (req, res) => {
         const user = await AuthenticationModel.findByIdAndUpdate(authId, {recoveryEmail: req.body.recoveryEmail}, {new: true});
         if(!user) throw new Error("User not found.");
         res.status(200).json({message: "Recovery email added successfully."}); 
+    }catch(err){
+        throwError(res, 400, err.message);
+    }
+}
+
+export const changePassword = async (req, res) => {
+    try{           
+        const authId = req.body.id;
+        const hashedPassword = await hash(req.body.password);
+        const user = await AuthenticationModel.findByIdAndUpdate(authId, {password: hashedPassword}, {new: true});
+        if(!user) throw new Error("User not found.");
+        res.status(200).json({message: "Password Change Successfully."}); 
     }catch(err){
         throwError(res, 400, err.message);
     }
