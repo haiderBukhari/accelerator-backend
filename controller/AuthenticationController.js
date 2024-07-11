@@ -1,6 +1,7 @@
 import { AuthenticationModel } from "../models/AuthenticationModel.js";
 import crypto from 'crypto'
 import { throwError } from "../utils/error.js";
+import jwt from "jsonwebtoken";
 
 async function hash(password) {
     return new Promise((resolve, reject) => {
@@ -29,7 +30,8 @@ export const registerUser = async (req, res) => {
         const hashPassword = await hash(password);
         const user = new AuthenticationModel({firstName, lastName, email, phoneNumber, password: hashPassword});
         await user.save();
-        res.cookie("id", user._id, {maxAge: 60000 * 60 * 24 * 10});
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
+        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10 });
         res.status(201).json({message: "User registered successfully.", id: user._id});
     }catch(err){
         throwError(res, 400, err.message);
@@ -42,9 +44,9 @@ export const loginUser = async (req, res) => {
         const user = await AuthenticationModel.findOne({email: email});
         if(!user) throw new Error("User not found.");
         const isMatch = await verify(password, user.password);
-        console.log(isMatch)
         if(!isMatch) throw new Error("Invalid credentials.");
-        res.cookie("id", user._id, {maxAge: 60000 * 60 * 24 * 10});
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
+        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10 });
         res.status(200).json({message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail});
     }catch(err){
         throwError(res, 400, err.message);
