@@ -22,5 +22,4 @@ export const bucket = storage.bucket(bucketName);
 PostsRoutes.route('/').get(getPosts).post(uploadText);
 PostsRoutes.post('/upload', upload.single('file'), uploadPost);
 
-
 export default PostsRoutes;
