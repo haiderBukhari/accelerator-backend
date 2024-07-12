@@ -49,7 +49,8 @@ export const uploadPost = async (req, res) => {
 export const getPosts = async (req, res) => {
     try {
         const id = req.id;
-        const posts = await PostsModel.find({ owner: id }).sort({ createdAt: -1 });
+        let posts = await PostsModel.find({ owner: id }).sort({ createdAt: -1 });
+        if(!posts.length) posts = [];
         res.status(200).json(posts);
     } catch (err) {
         throwError(res, 400, err.message);

@@ -30,8 +30,6 @@ export const registerUser = async (req, res) => {
         const hashPassword = await hash(password);
         const user = new AuthenticationModel({firstName, lastName, email, phoneNumber, password: hashPassword});
         await user.save();
-        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
-        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10 });
         res.status(201).json({message: "User registered successfully.", id: user._id});
     }catch(err){
         throwError(res, 400, err.message);
@@ -57,6 +55,8 @@ export const addRecoveryEmail = async (req, res) => {
     try{           
         const authId = req.body.id;
         const user = await AuthenticationModel.findByIdAndUpdate(authId, {recoveryEmail: req.body.recoveryEmail}, {new: true});
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
+        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10 });
         if(!user) throw new Error("User not found.");
         res.status(200).json({message: "Recovery email added successfully."}); 
     }catch(err){
