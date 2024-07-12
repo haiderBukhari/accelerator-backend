@@ -69,6 +69,8 @@ export const changePassword = async (req, res) => {
         const authId = req.body.id;
         const hashedPassword = await hash(req.body.password);
         const user = await AuthenticationModel.findByIdAndUpdate(authId, {password: hashedPassword}, {new: true});
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
+        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10 });
         if(!user) throw new Error("User not found.");
         res.status(200).json({message: "Password Change Successfully."}); 
     }catch(err){

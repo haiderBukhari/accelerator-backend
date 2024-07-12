@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(cors({
-    origin: ["http://localhost:5173", "https://accelerator-five.vercel.app/"],
+    origin: ["http://localhost:5173", "https://accelerator-five.vercel.app"],
     credentials: true
 }));
 
