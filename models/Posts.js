@@ -15,7 +15,7 @@ const PostsSchema = new mongoose.Schema({
     },
     videoUrl: {
         type: String,
-        required: '',
+        default: '',
     },
     likes: {
         type: Number,
@@ -29,6 +29,6 @@ const PostsSchema = new mongoose.Schema({
         type: Number,
         default: 0    
     }
-})
+}, {timestamps: true})
 
 export const PostsModel = mongoose.model('Posts', PostsSchema)

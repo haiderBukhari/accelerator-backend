@@ -6,7 +6,7 @@ const PostsRoutes = express.Router();
 const multerStorage = multer.memoryStorage();
 const upload = multer({ storage: multerStorage });
 import { fileURLToPath } from 'url';
-import { uploadPost } from '../controller/postsController.js';
+import { getPosts, uploadPost, uploadText } from '../controller/postsController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +18,8 @@ const storage = new Storage({
 const bucketName = 'groups-data-101';
 export const bucket = storage.bucket(bucketName);
 
+
+PostsRoutes.route('/').get(getPosts).post(uploadText);
 PostsRoutes.post('/upload', upload.single('file'), uploadPost);
 
 
