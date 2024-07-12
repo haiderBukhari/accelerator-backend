@@ -45,7 +45,7 @@ export const loginUser = async (req, res) => {
         const isMatch = await verify(password, user.password);
         if (!isMatch) throw new Error("Invalid credentials.");
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
-        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10, secure: isProduction, sameSite: 'None', httpOnly: true });
+        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10, secure: true, sameSite: 'None', });
         res.status(200).json({ message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail });
     } catch (err) {
         throwError(res, 400, err.message);
