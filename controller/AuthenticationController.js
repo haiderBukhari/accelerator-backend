@@ -37,45 +37,41 @@ export const registerUser = async (req, res) => {
 }
 
 export const loginUser = async (req, res) => {
-    const isProduction = process.env.NODE_ENV === 'production';
     const { email, password } = req.query;
     try {
         const user = await AuthenticationModel.findOne({ email: email });
         if (!user) throw new Error("User not found.");
         const isMatch = await verify(password, user.password);
         if (!isMatch) throw new Error("Invalid credentials.");
-        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
-        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10, secure: true, sameSite: 'None', });
-        res.status(200).json({ message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail });
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
+        res.status(200).json({ message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail, token: token });
     } catch (err) {
         throwError(res, 400, err.message);
     }
 }
 
 export const addRecoveryEmail = async (req, res) => {
-    const isProduction = process.env.NODE_ENV === 'production';
+    
     try {
         const authId = req.body.id;
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail }, { new: true });
-        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
-        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10, secure: isProduction });
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ message: "Recovery email added successfully." });
+        res.status(200).json({ message: "Recovery email added successfully.", token: token });
     } catch (err) {
         throwError(res, 400, err.message);
     }
 }
 
 export const changePassword = async (req, res) => {
-    const isProduction = process.env.NODE_ENV === 'production';
+    
     try {
         const authId = req.body.id;
         const hashedPassword = await hash(req.body.password);
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { password: hashedPassword }, { new: true });
-        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET, { expiresIn: '10d' });
-        res.cookie("token", token, { maxAge: 60000 * 60 * 24 * 10, secure: isProduction });
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ message: "Password Change Successfully." });
+        const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
+        res.status(200).json({ message: "Password Change Successfully.", token: token });
     } catch (err) {
         throwError(res, 400, err.message);
     }
