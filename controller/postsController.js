@@ -61,6 +61,7 @@ export const uploadText = async (req, res) => {
     try {
         const id = req.id;
         const { text } = req.body;
+        if(!text) throw new Error("Post can't be empty")
         const posts = await PostsModel.create({ owner: id, text: text });
         res.status(200).json({
             message: 'uploaded successfully.',

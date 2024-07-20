@@ -2,6 +2,7 @@ import { AuthenticationModel } from "../models/AuthenticationModel.js";
 import crypto from 'crypto'
 import { throwError } from "../utils/error.js";
 import jwt from "jsonwebtoken";
+import { bucket } from "../routes/AuthenticationRoutes.js";
 
 async function hash(password) {
     return new Promise((resolve, reject) => {
@@ -51,10 +52,10 @@ export const loginUser = async (req, res) => {
 }
 
 export const addRecoveryEmail = async (req, res) => {
-    
+
     try {
         const authId = req.body.id;
-        const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail }, { new: true });
+        const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail, isRecoveryEmailAdded: true }, { new: true });
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
         if (!user) throw new Error("User not found.");
         res.status(200).json({ message: "Recovery email added successfully.", token: token });
@@ -64,7 +65,7 @@ export const addRecoveryEmail = async (req, res) => {
 }
 
 export const changePassword = async (req, res) => {
-    
+
     try {
         const authId = req.body.id;
         const hashedPassword = await hash(req.body.password);
@@ -77,10 +78,72 @@ export const changePassword = async (req, res) => {
     }
 }
 
-// (async function run () {
-//     const password1 = await hash("123456")
-//     const password2 = await hash("123456")
-//     console.log("password1", await verify("123456", password1));
-//     console.log("password2", await verify("123456", password2));
-//     console.log("password1 == password2", password1 == password2);
-// })()
+export const getUserData = async (req, res) => {
+    try {
+        const authId = req.id;
+        const user = await AuthenticationModel.findById(authId);
+        if (!user) throw new Error("User not found.");
+        res.status(200).json({ user: user });
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+}
+
+export const updateProfileInformation = (req, res) => {
+    try {
+        if (!req.file) {
+            res.status(400).send('No file uploaded.');
+            return;
+        }
+
+        const file = req.file;
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const fileUpload = bucket.file(fileName);
+
+        const stream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+            },
+        });
+
+        stream.on('error', err => {
+            console.error('Error uploading to GCS:', err);
+            res.status(500).send('Error uploading file.');
+        });
+
+        stream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            const data = await AuthenticationModel.findById(req.id);
+            data.profilePicture = publicUrl;
+            data.firstName = req.body.firstName ?? data.firstName;
+            data.lastName = req.body.lastName ?? data.lastName;
+            data.bio = req.body.bio ?? data.bio;
+            data.aboutMe = req.body.aboutMe ?? data.aboutMe;
+            await data.save();
+            res.status(200).json({
+                message: 'Profile updated successfully.',
+            });
+        });
+        
+        stream.end(file.buffer);
+    } catch (err) {
+        throwError(res, 400, 'Error uploading file');
+    }
+}
+
+
+export const updateProfile = async (req, res) => {
+    try {
+        const data = await AuthenticationModel.findById(req.id);
+        data.firstName = req.body.firstName ?? data.firstName;
+        data.lastName = req.body.lastName ?? data.lastName;
+        data.bio = req.body.bio ?? data.bio;
+        data.aboutMe = req.body.aboutMe ?? data.aboutMe;
+        await data.save();
+        res.status(200).json({
+            message: 'Profile updated successfully.',
+        });
+    } catch (err) {
+        throwError(res, 400, 'Error Updating file');
+    }
+}

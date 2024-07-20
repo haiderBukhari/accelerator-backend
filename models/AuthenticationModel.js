@@ -23,6 +23,26 @@ const AuthenticationSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    isRecoveryEmailAdded: {
+        type: Boolean,
+        default: false
+    },
+    bio: {
+        type: String,
+        default: ''
+    },
+    aboutMe: {
+        type: String,
+        default: ''    
+    },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
     recoveryEmail: {
         type: String,
         default: ''
