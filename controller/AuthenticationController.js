@@ -45,7 +45,7 @@ export const loginUser = async (req, res) => {
         const isMatch = await verify(password, user.password);
         if (!isMatch) throw new Error("Invalid credentials.");
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
-        res.status(200).json({ message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail, token: token });
+        res.status(200).json({ message: "User logged in successfully.", id: user._id, recoveryEmail: user.recoveryEmail, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -58,7 +58,7 @@ export const addRecoveryEmail = async (req, res) => {
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail, isRecoveryEmailAdded: true }, { new: true });
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ message: "Recovery email added successfully.", token: token });
+        res.status(200).json({ message: "Recovery email added successfully.", token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -72,7 +72,7 @@ export const changePassword = async (req, res) => {
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { password: hashedPassword }, { new: true });
         if (!user) throw new Error("User not found.");
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
-        res.status(200).json({ message: "Password Change Successfully.", token: token });
+        res.status(200).json({ message: "Password Change Successfully.", token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -122,6 +122,9 @@ export const updateProfileInformation = (req, res) => {
             await data.save();
             res.status(200).json({
                 message: 'Profile updated successfully.',
+                profilePicture: data.profilePicture,
+                firstName: data.firstName, 
+                lastName: data.lastName
             });
         });
         
@@ -142,6 +145,7 @@ export const updateProfile = async (req, res) => {
         await data.save();
         res.status(200).json({
             message: 'Profile updated successfully.',
+            profilePicture: data.profilePicture, firstName: data.firstName, lastName: data.lastName
         });
     } catch (err) {
         throwError(res, 400, 'Error Updating file');
