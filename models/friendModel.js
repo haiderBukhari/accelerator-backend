@@ -8,6 +8,14 @@ const friendsSchema = new mongoose.Schema({
     friendId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
+    },
+    latestMessage: {
+        type: String,
+        default: ''
+    },
+    notifications: {
+        type:Number,
+        default: 0
     }
 }, {timestamps: true})
 
