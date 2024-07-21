@@ -7,6 +7,7 @@ import OtpRoutes from "./routes/SendOtpRoutes.js";
 import { config } from "dotenv";
 import PostsRoutes from "./routes/PostsRoutes.js";
 import { verifyToken } from "./utils/verifyJWT.js";
+import friendRoutes from "./routes/friendRoutes.js";
 
 config();
 const app = express();
@@ -20,6 +21,7 @@ app.use(cors({
 app.use('/api/auth', AuthenticationRoutes)
 app.use('/api/otp', OtpRoutes)
 app.use('/api/post', verifyToken, PostsRoutes)
+app.use('/api/friends', verifyToken, friendRoutes)
 
 app.get('*', (req, res)=>{
     res.send('Server is connected successfully');
