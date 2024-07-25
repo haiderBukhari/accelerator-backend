@@ -16,3 +16,7 @@ export const verifyToken = (req, res, next) => {
         next();
     });
 };
+
+// export const onlyAdmin = (req, res, next) => {
+
+// }

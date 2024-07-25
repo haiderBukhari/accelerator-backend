@@ -83,7 +83,16 @@ export const getUserData = async (req, res) => {
         const authId = req.id;
         const user = await AuthenticationModel.findById(authId);
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ user: user });
+        const userDetails = {
+            id: user._id,
+            profilePicture: user.profilePicture,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            bio: user.bio,
+            aboutMe: user.aboutMe,
+            isAdmin: user.isAdmin
+        }
+        res.status(200).json({ user: userDetails });
     } catch (err) {
         throwError(res, 400, err.message);
     }
