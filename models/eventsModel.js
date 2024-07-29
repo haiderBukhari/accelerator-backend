@@ -23,10 +23,25 @@ const EventSchema = new mongoose.Schema({
     },
     joiningLink: {
         type: String,
+        default: ''
     },
     address: {
         type: String,
-    }
+        default: ''
+    },
+    likes: {
+        type:Number,
+        default: 0
+    },
+    peopleAttending: {
+        type:Number,
+        default: 0
+    },
+    attendingPeoples: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+        }
+    ]
 }, {timestamps: true})
 
 export const EventModel = mongoose.model('events', EventSchema)
