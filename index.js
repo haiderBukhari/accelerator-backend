@@ -10,6 +10,7 @@ import { verifyToken } from "./utils/verifyJWT.js";
 import friendRoutes from "./routes/friendRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
+import eventsRoutes from "./routes/eventsRoutes.js";
 
 config();
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/post', verifyToken, PostsRoutes)
 app.use('/api/friends', verifyToken, friendRoutes)
 app.use('/api/chat', verifyToken, chatRoutes)
 app.use('/api/courses', verifyToken, courseRoutes)
+app.use('/api/events', verifyToken, eventsRoutes)
 
 app.get('*', (req, res)=>{
     res.send('Server is connected successfully');
