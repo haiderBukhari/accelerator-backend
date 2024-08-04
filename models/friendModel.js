@@ -9,6 +9,10 @@ const friendsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
+    isfriendAccepted: {
+        type: Boolean,
+        default: false
+    },
     latestMessage: {
         type: String,
         default: ''
