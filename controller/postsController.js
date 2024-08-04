@@ -55,7 +55,6 @@ export const getPosts = async (req, res) => {
         const skip = (currentPage - 1) * pageSize;
         const id = req.id;
 
-        // Step 1: Get friends' IDs excluding the current user
         const friends = await friendModel.find({
             $or: [
                 { owner: id },
@@ -68,12 +67,10 @@ export const getPosts = async (req, res) => {
             friend.owner.equals(id) ? friend.friendId : friend.owner
         );
 
-        // Step 2: Get posts from friends in random order, excluding the current user's posts and aggregate with user info
         const posts = await PostsModel.aggregate([
             {
                 $match: {
-                    owner: { $in: friendIds },
-                    owner: { $ne: id }
+                    owner: { $in: friendIds }
                 }
             },
             { $sample: { size: 100 } }, // Sample a larger set to get random results
@@ -112,6 +109,7 @@ export const getPosts = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
+
 
 export const uploadText = async (req, res) => {
     try {

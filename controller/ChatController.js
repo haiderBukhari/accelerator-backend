@@ -6,7 +6,7 @@ export const getFriends = async (req, res) => {
 
     try {
         const friendsDetails = await friendModel.aggregate([
-            { $match: { owner: new mongoose.Types.ObjectId(userId) } },
+            { $match: { owner: new mongoose.Types.ObjectId(userId), isfriendAccepted: true } },
             {
                 $lookup: {
                     from: 'authentications',
