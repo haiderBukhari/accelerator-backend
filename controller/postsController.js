@@ -1,3 +1,4 @@
+import { friendModel } from "../models/friendModel.js";
 import { PostsModel } from "../models/Posts.js";
 import { bucket } from "../routes/PostsRoutes.js";
 import { throwError } from "../utils/error.js";
@@ -48,20 +49,75 @@ export const uploadPost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
+        // const { currentPage } = req.query;
+        const currentPage = 1;
+        const pageSize = 10;
+        const skip = (currentPage - 1) * pageSize;
         const id = req.id;
-        let posts = await PostsModel.find({ owner: id }).sort({ createdAt: -1 });
-        if(!posts.length) posts = [];
+
+        // Step 1: Get friends' IDs excluding the current user
+        const friends = await friendModel.find({
+            $or: [
+                { owner: id },
+                { friendId: id }
+            ],
+            isfriendAccepted: true
+        });
+
+        const friendIds = friends.map(friend =>
+            friend.owner.equals(id) ? friend.friendId : friend.owner
+        );
+
+        // Step 2: Get posts from friends in random order, excluding the current user's posts and aggregate with user info
+        const posts = await PostsModel.aggregate([
+            {
+                $match: {
+                    owner: { $in: friendIds },
+                    owner: { $ne: id }
+                }
+            },
+            { $sample: { size: 100 } }, // Sample a larger set to get random results
+            { $skip: skip },
+            { $limit: pageSize },
+            {
+                $lookup: {
+                    from: 'authentications', // Assuming your AuthenticationModel collection name is 'authentications'
+                    localField: 'owner',
+                    foreignField: '_id',
+                    as: 'userInfo'
+                }
+            },
+            { $unwind: '$userInfo' }, // Unwind to deconstruct the array from lookup
+            {
+                $project: {
+                    _id: 1,
+                    text: 1,
+                    imageUrl: 1,
+                    videoUrl: 1,
+                    likes: 1,
+                    comments: 1,
+                    shares: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    owner: 1,
+                    'userInfo.firstName': 1,
+                    'userInfo.lastName': 1,
+                    'userInfo.profilePicture': 1
+                }
+            }
+        ]);
+
         res.status(200).json(posts);
     } catch (err) {
-        throwError(res, 400, err.message);
+        res.status(400).json({ message: err.message });
     }
-}
+};
 
 export const uploadText = async (req, res) => {
     try {
         const id = req.id;
         const { text } = req.body;
-        if(!text) throw new Error("Post can't be empty")
+        if (!text) throw new Error("Post can't be empty")
         const posts = await PostsModel.create({ owner: id, text: text });
         res.status(200).json({
             message: 'uploaded successfully.',
