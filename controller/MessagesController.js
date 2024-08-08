@@ -16,12 +16,16 @@ export const sendMessage = async (req, res) => {
 }
 
 export const getAllMessages = async (req, res) => {
-    try{
+    const { secondPersonId } = req.query;
+    try {
         const messages = await MessagesModel.find({
-            $or: [{ senderId: req.id }, { receiverId: req.id }]
-        }).sort({"timestamp": 1})
+            $or: [
+                { senderId: req.id, receiverId: secondPersonId },
+                { receiverId: req.id, senderId: secondPersonId }
+            ]
+        }).sort({ "timestamp": 1 });
         res.status(200).json(messages);
-    }catch(err){
+    } catch (err) {
         throwError(res, 400, err.message);
     }
 }

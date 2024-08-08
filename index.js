@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
             });
             await newMessage.save();    
             io.to(data1.socketId).emit('recieve_message', message);
+            io.to(data.socketId).emit('recieve_message', message);
         });
 
         socket.on('disconnect', () => {
