@@ -74,13 +74,15 @@ io.on('connection', (socket) => {
         });
 
         socket.on('send_message', async ({message, id}) => {
+            console.log(`message recived from ${data.firstName} ${message}`)
             const data1 = await AuthenticationModel.findById(id);
             const newMessage = new MessagesModel({
                 senderId: data._id,
                 receiverId: id,
                 message: message
             });
-            await newMessage.save();    
+            await newMessage.save();   
+            console.log(data1.socketId)
             io.to(data1.socketId).emit('recieve_message', message);
             io.to(data.socketId).emit('recieve_message', message);
         });
