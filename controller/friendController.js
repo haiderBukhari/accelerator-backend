@@ -30,7 +30,7 @@ export const getFriendList = async (req, res) => {
             friendId: new mongoose.Types.ObjectId(req.id),
             isfriendAccepted: false
         });
-
+        
         res.status(200).json({
             total: documentList,
             nonFriends: nonFriends,

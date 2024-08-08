@@ -80,7 +80,7 @@ export const changePassword = async (req, res) => {
 
 export const getUserData = async (req, res) => {
     try {
-        const authId = req.id;
+        const authId = req.query.id || req.id;
         const user = await AuthenticationModel.findById(authId);
         if (!user) throw new Error("User not found.");
         const userDetails = {

@@ -46,6 +46,10 @@ const AuthenticationSchema = new mongoose.Schema({
     recoveryEmail: {
         type: String,
         default: ''
+    },
+    socketId: {
+        type: String,
+        defauld: ''
     }
 })
 
