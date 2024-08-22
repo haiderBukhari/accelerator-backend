@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { friendModel } from "../models/friendModel.js";
 import { PostsModel } from "../models/Posts.js";
 import { bucket } from "../routes/PostsRoutes.js";
@@ -49,7 +50,6 @@ export const uploadPost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
-        // const { currentPage } = req.query;
         const currentPage = 1;
         const pageSize = 10;
         const skip = (currentPage - 1) * pageSize;
@@ -103,13 +103,25 @@ export const getPosts = async (req, res) => {
                 }
             }
         ]);
-
         res.status(200).json(posts);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
 
+export const getIndividualPersonPosts = async (req, res) => {
+    try{
+        const {id} = req.query;
+        if(!id) throw new Error('id is required');
+        if (!mongoose.isValidObjectId(id)) {
+            throw new Error("Invalid id format");
+        }
+        const posts = await PostsModel.find({ owner: id }).sort({ createdAt: -1 });
+        res.status(200).json(posts);
+    }catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+}
 
 export const uploadText = async (req, res) => {
     try {

@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { throwError } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import { bucket } from "../routes/AuthenticationRoutes.js";
+import mongoose from "mongoose";
 
 async function hash(password) {
     return new Promise((resolve, reject) => {
@@ -81,11 +82,18 @@ export const changePassword = async (req, res) => {
 export const getUserData = async (req, res) => {
     try {
         const authId = req.query.id || req.id;
+        if(!authId) throw new Error('id is required');
+        if (!mongoose.isValidObjectId(authId)) {
+            throw new Error("Invalid id format");
+        }
         const user = await AuthenticationModel.findById(authId);
         if (!user) throw new Error("User not found.");
         const userDetails = {
             id: user._id,
             profilePicture: user.profilePicture,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            backgroundPicture: user.backgroundPicture,
             firstName: user.firstName,
             lastName: user.lastName,
             bio: user.bio,

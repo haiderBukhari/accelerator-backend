@@ -39,6 +39,10 @@ const AuthenticationSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    backgroundPicture: {
+        type: String,
+        default: ''
+    },
     isAdmin: {
         type: Boolean,
         default: false
