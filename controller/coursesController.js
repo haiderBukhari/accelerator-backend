@@ -45,7 +45,6 @@ export const getCourses = async (req, res) => {
             };
         }));
 
-
         res.status(200).json({
             courses: courseWithModules
         });
