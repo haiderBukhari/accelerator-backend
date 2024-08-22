@@ -1,5 +1,5 @@
 import express from 'express'
-import { addCourse, getCourses, getModule, uploadModule } from '../controller/coursesController.js';
+import { addCourse, deleteCourse, getCourses, getModule, uploadModule } from '../controller/coursesController.js';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import multer from 'multer';
@@ -22,7 +22,7 @@ const uploadMultiple = upload.fields([
     { name: 'file1', maxCount: 1 },
 ]);
 
-courseRoutes.route('/').get(getCourses).post(addCourse);
+courseRoutes.route('/').get(getCourses).post(addCourse).delete(deleteCourse);
 courseRoutes.route('/modules').post(uploadMultiple, uploadModule);
 courseRoutes.route('/modules/:id').get(getModule);
 

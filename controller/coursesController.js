@@ -45,6 +45,7 @@ export const getCourses = async (req, res) => {
             };
         }));
 
+
         res.status(200).json({
             courses: courseWithModules
         });
@@ -119,3 +120,28 @@ export const getModule = async (req, res) => {
         throwError(res, 400, err.message);
     }
 }
+
+export const deleteCourse = async (req, res) => {
+    try {
+        const { id } = req.query;
+        if (!id) {
+            throw new Error("Course ID is required");
+        }
+        if (!mongoose.isValidObjectId(id)) {
+            throw new Error("Invalid Course ID format");
+        }
+
+        const course = await CourseModel.findByIdAndDelete(id);
+
+        if (!course) {
+            throw new Error("Course not found");
+        }
+
+        res.status(200).json({
+            message: "Course deleted successfully",
+            courseId: id
+        });
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+};
