@@ -14,6 +14,7 @@ const keyFilename = path.join(__dirname, '../config/calm-streamer-426319-e8-109e
 
 const storage = new Storage({
     keyFilename: keyFilename,
+    limits: { fileSize: 200 * 1024 * 1024 },
 });
 const bucketName = 'groups-data-101';
 export const bucket = storage.bucket(bucketName);
