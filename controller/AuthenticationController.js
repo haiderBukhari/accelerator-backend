@@ -59,7 +59,7 @@ export const addRecoveryEmail = async (req, res) => {
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail, isRecoveryEmailAdded: true }, { new: true });
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ message: "Recovery email added successfully.", token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
+        res.status(200).json({ message: "Recovery email added successfully.", id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -73,7 +73,7 @@ export const changePassword = async (req, res) => {
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { password: hashedPassword }, { new: true });
         if (!user) throw new Error("User not found.");
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
-        res.status(200).json({ message: "Password Change Successfully.", token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
+        res.status(200).json({ message: "Password Change Successfully.",  id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
     } catch (err) {
         throwError(res, 400, err.message);
     }
