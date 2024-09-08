@@ -6,7 +6,6 @@ import multer from 'multer';
 const multerStorage = multer.memoryStorage();
 const upload = multer({ storage: multerStorage });
 import { fileURLToPath } from 'url';
-import { getPosts, uploadPost, uploadText } from '../controller/postsController.js';
 
 const courseRoutes = express.Router();
 const __filename = fileURLToPath(import.meta.url);

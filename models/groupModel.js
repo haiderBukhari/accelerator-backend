@@ -25,6 +25,18 @@ const groupSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    groupImage: {
+        type: String,
+        required: true
+    },
+    likes: {
+        type:Number,
+        default: 0
+    },
+    isPrivate: {
+        type: Boolean,
+        default: false
+    }
 })
 
 export const groups = await new mongoose.model('Groups', groupSchema);

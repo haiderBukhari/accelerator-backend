@@ -26,7 +26,7 @@ app.use(express.urlencoded({ limit: '200mb', extended: true }));
 const server = http.createServer(app);
 
 app.use(express.json());
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(cors({
     origin: ["http://localhost:5173", "https://accelerator-five.vercel.app"],
@@ -48,8 +48,9 @@ app.use('/api/friends', friendRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/events', eventsRoutes)
+app.use('/api/groups', groupRoutes)
+
 app.get('/api/messages', getAllMessages)
-app.get('/api/groups', groupRoutes)
 
 
 io.on('connection', (socket) => {
