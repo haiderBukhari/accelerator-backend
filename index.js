@@ -17,6 +17,7 @@ import { getAllMessages } from "./controller/MessagesController.js";
 import jwt from 'jsonwebtoken'
 import { AuthenticationModel } from "./models/AuthenticationModel.js";
 import { MessagesModel } from "./models/MessageModel.js";
+import groupRoutes from "./routes/groupRoutes.js";
 
 config();
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/events', eventsRoutes)
 app.get('/api/messages', getAllMessages)
+app.get('/api/groups', groupRoutes)
 
 
 io.on('connection', (socket) => {
