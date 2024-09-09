@@ -92,6 +92,7 @@ export const getPosts = async (req, res) => {
                     imageUrl: 1,
                     videoUrl: 1,
                     likes: 1,
+                    likeBy: 1,
                     comments: 1,
                     shares: 1,
                     createdAt: 1,
@@ -106,6 +107,42 @@ export const getPosts = async (req, res) => {
         res.status(200).json(posts);
     } catch (err) {
         res.status(400).json({ message: err.message });
+    }
+};
+
+export const likePost = async (req, res) => {
+    try {
+        const postId = req.body.id; // Assuming post ID is passed as a route param
+        const userId = req.id; // Assuming the user ID is obtained from the token/session
+
+        // Check if the post exists
+        const post = await PostsModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Check if the user has already liked the post
+        const alreadyLiked = post.likeBy.includes(userId);
+
+        if (alreadyLiked) {
+            // User has already liked, so unlike the post
+            post.likes -= 1;
+            post.likeBy = post.likeBy.filter(id => id.toString() !== userId.toString());
+        } else {
+            // User hasn't liked, so like the post
+            post.likes += 1;
+            post.likeBy.push(userId);
+        }
+
+        // Save the post with the updated likes
+        await post.save();
+
+        res.status(200).json({
+            message: alreadyLiked ? "Post unliked successfully." : "Post liked successfully.",
+            post,
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 };
 
