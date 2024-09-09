@@ -20,6 +20,7 @@ import { MessagesModel } from "./models/MessageModel.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import NotificationRoutes from "./routes/NotificationRoute.js";
 import groupFolderRoutes from "./routes/groupFolderRoutes.js";
+import { NotificationsModel } from "./models/notificationModel.js";
 
 config();
 const app = express();
@@ -90,8 +91,12 @@ io.on('connection', (socket) => {
                 receiverId: id,
                 message: message
             });
-            await newMessage.save();   
-            console.log(data1.socketId)
+            await newMessage.save();
+            await NotificationsModel.create({
+                userId: id,
+                message: `${data.firstName} ${data.lastName} sent you a message`,
+                createdAt: new Date()
+            })    
             io.to(data1.socketId).emit('recieve_message', message);
             io.to(data.socketId).emit('recieve_message', message);
         });

@@ -5,42 +5,65 @@ import mongoose from "mongoose";
 import { NotificationsModel } from "../models/notificationModel.js";
 
 export const getFriendList = async (req, res) => {
-    const { currentPage } = req.query;
+    const { currentPage, name } = req.query;
     const pageSize = 8;
     const skip = (currentPage - 1) * pageSize;
 
     try {
-        const friends = await friendModel.find({ $or: [
-            { owner: new mongoose.Types.ObjectId(req.id) },
-            { friendId: new mongoose.Types.ObjectId(req.id) }
-        ] });
-
-        const friendIds = friends?.map(friend => friend.friendId == req.id ? friend.owner : friend.friendId);
-        
-        const documentList = await AuthenticationModel.countDocuments({
-            _id: { $ne: req.id, $nin: friendIds },
-            isAdmin: false
+        // Fetch friends
+        const friends = await friendModel.find({
+            $or: [
+                { owner: new mongoose.Types.ObjectId(req.id) },
+                { friendId: new mongoose.Types.ObjectId(req.id) }
+            ]
         });
 
-        const nonFriends = await AuthenticationModel.find({
+        const friendIds = friends?.map(friend => friend.friendId.toString() === req.id ? friend.owner : friend.friendId);
+        
+        // Build query object
+        let query = {
             _id: { $ne: req.id, $nin: friendIds },
             isAdmin: false
-        }, { _id: 1, firstName: 1, lastName: 1, aboutMe: 1, profilePicture: 1 }).skip(skip).limit(pageSize);
+        };
 
+        // Add name filter if name query parameter is present
+        if (name) {
+            query = {
+                ...query,
+                $or: [
+                    { firstName: { $regex: new RegExp(name, 'i') } },
+                    { lastName: { $regex: new RegExp(name, 'i') } }
+                ]
+            };
+        }
+
+        // Count total documents with the given query
+        const documentList = await AuthenticationModel.countDocuments(query);
+
+        // Fetch the list of users based on the query with pagination
+        const nonFriends = await AuthenticationModel.find(query, {
+            _id: 1,
+            firstName: 1,
+            lastName: 1,
+            aboutMe: 1,
+            profilePicture: 1
+        }).skip(skip).limit(pageSize);
+
+        // Count pending friends
         const pendingFriends = await friendModel.countDocuments({
             friendId: new mongoose.Types.ObjectId(req.id),
             isfriendAccepted: false
         });
-        
+
         res.status(200).json({
             total: documentList,
             nonFriends: nonFriends,
             pendingFriends: pendingFriends
-        })
+        });
     } catch (err) {
         throwError(res, 400, err.message);
     }
-}
+};
 
 export const addFriend = async (req, res) => {
     const { id } = req.body;

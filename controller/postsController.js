@@ -5,7 +5,7 @@ import { bucket } from "../routes/PostsRoutes.js";
 import { throwError } from "../utils/error.js";
 
 export const uploadPost = async (req, res) => {
-    const { isImage, isVideo, text } = req.body;
+    const { isImage, isVideo, text, groupPost, groupId } = req.body;
     try {
         if (!req.file) {
             res.status(400).send('No file uploaded.');
@@ -33,7 +33,9 @@ export const uploadPost = async (req, res) => {
                 text: text || '',
                 imageUrl: isImage === 'true' ? publicUrl : '',
                 videoUrl: isVideo === 'true' ? publicUrl : '',
-                owner: req.id
+                owner: req.id,
+                isGroupPost: groupPost == true,
+                group: groupPost == true ? groupId: null 
             })
             res.status(200).json({
                 message: 'File uploaded successfully.',
@@ -50,11 +52,56 @@ export const uploadPost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
-        const currentPage = 1;
+        const currentPage = parseInt(req.query.currentPage) || 1;
         const pageSize = 10;
         const skip = (currentPage - 1) * pageSize;
         const id = req.id;
+        const { groupId } = req.query; // Get groupId from query parameters
 
+        // If groupId is provided, fetch posts related to that group only
+        if (groupId) {
+            const groupPosts = await PostsModel.aggregate([
+                {
+                    $match: {
+                        group: new mongoose.Types.ObjectId(groupId), // Filter posts for the given group
+                    }
+                },
+                { $skip: skip },
+                { $limit: pageSize },
+                {
+                    $lookup: {
+                        from: 'authentications', // Assuming your AuthenticationModel collection name is 'authentications'
+                        localField: 'owner',
+                        foreignField: '_id',
+                        as: 'userInfo'
+                    }
+                },
+                { $unwind: '$userInfo' }, // Unwind to deconstruct the array from lookup
+                {
+                    $project: {
+                        _id: 1,
+                        text: 1,
+                        imageUrl: 1,
+                        videoUrl: 1,
+                        likes: 1,
+                        likeBy: 1,
+                        comments: 1,
+                        shares: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        owner: 1,
+                        'userInfo.firstName': 1,
+                        'userInfo.lastName': 1,
+                        'userInfo.profilePicture': 1,
+                        'userInfo._id': 1
+                    }
+                }
+            ]);
+
+            return res.status(200).json(groupPosts);
+        }
+
+        // If groupId is not provided, fetch posts from friends
         const friends = await friendModel.find({
             $or: [
                 { owner: id },
@@ -70,7 +117,7 @@ export const getPosts = async (req, res) => {
         const posts = await PostsModel.aggregate([
             {
                 $match: {
-                    owner: { $in: friendIds }
+                    owner: { $in: friendIds } // Only fetch posts from friends
                 }
             },
             { $sample: { size: 100 } }, // Sample a larger set to get random results
@@ -104,6 +151,7 @@ export const getPosts = async (req, res) => {
                 }
             }
         ]);
+
         res.status(200).json(posts);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -163,9 +211,9 @@ export const getIndividualPersonPosts = async (req, res) => {
 export const uploadText = async (req, res) => {
     try {
         const id = req.id;
-        const { text } = req.body;
+        const { text, groupPost, groupId } = req.body;
         if (!text) throw new Error("Post can't be empty")
-        const posts = await PostsModel.create({ owner: id, text: text });
+        const posts = await PostsModel.create({ owner: id, text: text, isGroupPost: groupPost == true, group: groupPost == true ? groupId: null  });
         res.status(200).json({
             message: 'uploaded successfully.',
             newPost: posts,

@@ -5,7 +5,8 @@ const NotificationRoutes = express.Router();
 
 NotificationRoutes.get('/', async (req, res) => {
     try {
-        const notifications = await NotificationsModel.find({ userId: req.id });
+        const notifications = await NotificationsModel.find({ userId: req.id }).sort({ createdAt: -1 });
+
         let count = 0;
         notifications.forEach(async (notification) => {
             if(notification.status === "unread"){
