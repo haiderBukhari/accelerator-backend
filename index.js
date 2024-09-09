@@ -19,6 +19,7 @@ import { AuthenticationModel } from "./models/AuthenticationModel.js";
 import { MessagesModel } from "./models/MessageModel.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import NotificationRoutes from "./routes/NotificationRoute.js";
+import groupFolderRoutes from "./routes/groupFolderRoutes.js";
 
 config();
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/events', eventsRoutes)
 app.use('/api/groups', groupRoutes)
+app.use('/api/groups-folders', groupFolderRoutes)
 app.use('/api/notification', NotificationRoutes)
 
 app.get('/api/messages', getAllMessages)

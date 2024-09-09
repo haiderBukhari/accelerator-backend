@@ -5,10 +5,6 @@ const groupSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    members: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Authentication'
-    }],
     contactNumber: {
         type: String,
         required: true
@@ -36,7 +32,19 @@ const groupSchema = new mongoose.Schema({
     isPrivate: {
         type: Boolean,
         default: false
-    }
+    },
+    joinedUsers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+    pendingUsers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ]
 })
 
 export const groups = await new mongoose.model('Groups', groupSchema);

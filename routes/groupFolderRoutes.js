@@ -1,5 +1,5 @@
 import express from 'express';
-import { createGroup, getGroups, getGroupUsers, getJoinedGroupDetails, getSpecificGroup, joinGroup } from '../controller/groupController.js';
+import { createFolder, createFolderImage, getGroupFolders, getGroupFoldersImages, getGroupUsers } from '../controller/groupController.js';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import multer from 'multer';
@@ -7,7 +7,7 @@ const multerStorage = multer.memoryStorage();
 const upload = multer({ storage: multerStorage });
 import { fileURLToPath } from 'url';
 
-const groupRoutes = express.Router();
+const groupFolderRoutes = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const keyFilename = path.join(__dirname, '../config/calm-streamer-426319-e8-109e2f187aa1.json');
@@ -17,9 +17,7 @@ const storage = new Storage({
 const bucketName = 'groups-data-101';
 export const bucket = storage.bucket(bucketName);
 
-groupRoutes.route('/').get(getGroups).post(upload.single('file'), createGroup).patch(joinGroup)
-groupRoutes.route('/allusers').get(getGroupUsers)
-groupRoutes.route('/joined-groups').get(getJoinedGroupDetails)
-groupRoutes.route('/:id').get(getSpecificGroup)
+groupFolderRoutes.route('/').get(getGroupFolders).post(upload.single('file'), createFolder)
+groupFolderRoutes.route('/images').get(getGroupFoldersImages).post(upload.single('file'), createFolderImage)
 
-export default groupRoutes
+export default groupFolderRoutes
