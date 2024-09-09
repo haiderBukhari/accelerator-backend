@@ -2,6 +2,7 @@ import { friendModel } from "../models/friendModel.js";
 import { AuthenticationModel } from "../models/AuthenticationModel.js";
 import { throwError } from "../utils/error.js";
 import mongoose from "mongoose";
+import { NotificationsModel } from "../models/notificationModel.js";
 
 export const getFriendList = async (req, res) => {
     const { currentPage } = req.query;
@@ -48,6 +49,12 @@ export const addFriend = async (req, res) => {
         const friend = await friendModel.find({ owner: req.id, friendId: id });
         if (friend.length) throw new Error("Friend already exists");
         await friendModel.create({ owner: req.id, friendId: id });
+        const friendData = await AuthenticationModel.findById(req.id);
+        await NotificationsModel.create({
+            userId: id,
+            message: `${friendData.firstName} ${friendData.lastName} sent you a friend request`,
+            createdAt: new Date()
+        })
         res.status(200).json({
             message: "Friend Added"
         })
