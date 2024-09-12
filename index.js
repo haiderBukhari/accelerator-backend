@@ -21,6 +21,7 @@ import groupRoutes from "./routes/groupRoutes.js";
 import NotificationRoutes from "./routes/NotificationRoute.js";
 import groupFolderRoutes from "./routes/groupFolderRoutes.js";
 import { NotificationsModel } from "./models/notificationModel.js";
+import PaymentRoutes from "./routes/PaymentRoutes.js";
 
 config();
 const app = express();
@@ -45,6 +46,7 @@ const io = new Server(server, {
 
 app.use('/api/auth', AuthenticationRoutes)
 app.use('/api/otp', OtpRoutes)
+app.use('/api/payment', PaymentRoutes)
 app.use(verifyToken)
 app.use('/api/post', PostsRoutes)
 app.use('/api/friends', friendRoutes)
@@ -54,7 +56,6 @@ app.use('/api/events', eventsRoutes)
 app.use('/api/groups', groupRoutes)
 app.use('/api/groups-folders', groupFolderRoutes)
 app.use('/api/notification', NotificationRoutes)
-
 app.get('/api/messages', getAllMessages)
 
 
