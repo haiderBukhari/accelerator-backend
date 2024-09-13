@@ -7,6 +7,7 @@ export const SendEmail = (email1, name, otp) => {
         host:"smtp.gmail.com",
         secure: false,
         auth: {
+            // 
             user: process.env.SERVICE,
             pass: process.env.ApplicationPassword,
         },
