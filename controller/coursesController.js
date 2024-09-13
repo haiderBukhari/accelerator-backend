@@ -53,7 +53,6 @@ export const getCourses = async (req, res) => {
     }
 };
 
-
 export const uploadModule = async (req, res) => {
     try {
         const { courseId, name, descriptionShort, descriptionLong } = req.body;
@@ -112,6 +111,25 @@ export const getModule = async (req, res) => {
         const data = await modulesModel.findById(moduleId);
         data.views = data.views + 1;
         await data.save();
+        res.status(200).json({
+            module: data
+        })
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+}
+
+
+export const getCourseModule = async (req, res) => {
+    try {
+        const moduleId = req.query.id;
+        if (!moduleId) {
+            throw new Error("courseName is required");
+        }
+        if (!mongoose.isValidObjectId(moduleId)) {
+            throw new Error("Invalid moduleId format");
+        }
+        const data = await modulesModel.find({courseId: moduleId});
         res.status(200).json({
             module: data
         })
