@@ -54,6 +54,30 @@ const AuthenticationSchema = new mongoose.Schema({
     socketId: {
         type: String,
         defauld: ''
+    },
+    isMonthlySubscriber: {
+        type: Boolean,
+        default: false
+    },
+    isYearlySubscriber: {
+        type: Boolean,
+        default: false
+    },
+    dateOfSubscription: {
+        type: Date,
+        default: null
+    },
+    dateOfUnsubscription: {
+        type: Date,
+        default: null
+    },
+    orderId: {
+        type:String,
+        default: ''
+    },
+    initialType: {
+        type:String,
+        default: ''
     }
 })
 
