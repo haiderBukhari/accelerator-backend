@@ -64,9 +64,16 @@ export const addRecoveryEmail = async (req, res) => {
     try {
         const authId = req.body.id;
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail, isRecoveryEmailAdded: true }, { new: true });
+        let isSubscriber = false;
+        const currentDate = new Date();
+        if ((user.isMonthlySubscriber || user.isYearlySubscriber) && user.dateOfUnsubscription) {
+            if (user.dateOfUnsubscription > currentDate) {
+                isSubscriber = true;
+            }
+        }
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
         if (!user) throw new Error("User not found.");
-        res.status(200).json({ message: "Recovery email added successfully.", id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
+        res.status(200).json({ message: "Recovery email added successfully.", id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName, isSubscriber: isSubscriber });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -79,8 +86,15 @@ export const changePassword = async (req, res) => {
         const hashedPassword = await hash(req.body.password);
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { password: hashedPassword }, { new: true });
         if (!user) throw new Error("User not found.");
+        let isSubscriber = false;
+        const currentDate = new Date();
+        if ((user.isMonthlySubscriber || user.isYearlySubscriber) && user.dateOfUnsubscription) {
+            if (user.dateOfUnsubscription > currentDate) {
+                isSubscriber = true;
+            }
+        }
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
-        res.status(200).json({ message: "Password Change Successfully.",  id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName });
+        res.status(200).json({ message: "Password Change Successfully.",  id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName, isSubscriber: isSubscriber });
     } catch (err) {
         throwError(res, 400, err.message);
     }

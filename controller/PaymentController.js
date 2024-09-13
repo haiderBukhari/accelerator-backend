@@ -49,7 +49,6 @@ export const createCheckout = async (req, res) => {
 
 export const webhook = async (req, res) => {
     const event = req.body;
-
     if (event.type === 'payment.updated') {
         const paymentId = event.data.object.payment.id;
         console.log(event.data.object.payment.order_id)
@@ -62,15 +61,18 @@ export const webhook = async (req, res) => {
             const currentDate = new Date();
             const expirationDate = new Date(currentDate);
             expirationDate.setMonth(currentDate.getMonth() + 1);
-            data.expirationDate = expirationDate;
+            data.isMonthlySubscriber = true;
+            data.dateOfSubscription = currentDate;
+            data.dateOfUnsubscription = expirationDate;
         }else{
             const currentDate = new Date();
             const expirationDate = new Date(currentDate);
             expirationDate.setFullYear(currentDate.getFullYear() + 1);
-            data.expirationDate = expirationDate;
+            data.isYearlySubscriber = true;
+            data.dateOfSubscription = currentDate;
+            data.dateOfUnsubscription = expirationDate;
         }
         await data.save();
     }
-
     res.status(200).send('Webhook received');
 }
