@@ -22,6 +22,7 @@ import NotificationRoutes from "./routes/NotificationRoute.js";
 import groupFolderRoutes from "./routes/groupFolderRoutes.js";
 import { NotificationsModel } from "./models/notificationModel.js";
 import PaymentRoutes from "./routes/PaymentRoutes.js";
+import commentsRoutes from "./routes/commentsRoutes.js";
 
 config();
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/events', eventsRoutes)
 app.use('/api/groups', groupRoutes)
+app.use('/api/comments', commentsRoutes)
 app.use('/api/groups-folders', groupFolderRoutes)
 app.use('/api/notification', NotificationRoutes)
 app.get('/api/messages', getAllMessages)
