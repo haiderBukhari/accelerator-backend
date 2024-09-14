@@ -67,6 +67,7 @@ export const getPosts = async (req, res) => {
                         ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
                     }
                 },
+                { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
                 { $skip: skip },
                 { $limit: pageSize },
                 {
@@ -122,7 +123,7 @@ export const getPosts = async (req, res) => {
                     ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
                 }
             },
-            { $sample: { size: 100 } }, // Sample a larger set to get random results
+            { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
             { $skip: skip },
             { $limit: pageSize },
             {
@@ -160,6 +161,7 @@ export const getPosts = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
+
 
 export const likePost = async (req, res) => {
     try {
