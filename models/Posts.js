@@ -27,6 +27,12 @@ const PostsSchema = new mongoose.Schema({
             ref: 'User' // Assuming you have a User model
         }
     ],
+    savedBy: [
+        {
+            type: mongoose.Schema.Types.ObjectId, // Now this is an array of ObjectId
+            ref: 'User' // Assuming you have a User model
+        }
+    ],
     comments: {
         type: Number,
         default: 0    

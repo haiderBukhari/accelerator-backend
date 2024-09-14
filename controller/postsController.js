@@ -55,8 +55,8 @@ export const getPosts = async (req, res) => {
         const currentPage = parseInt(req.query.currentPage) || 1;
         const pageSize = 10;
         const skip = (currentPage - 1) * pageSize;
-        const id = req.id;
-        const { groupId } = req.query; // Get groupId from query parameters
+        const id = req.id; // User ID from the request
+        const { groupId, isOnlySavedPost } = req.query; // Extract query parameters
 
         // If groupId is provided, fetch posts related to that group only
         if (groupId) {
@@ -64,6 +64,7 @@ export const getPosts = async (req, res) => {
                 {
                     $match: {
                         group: new mongoose.Types.ObjectId(groupId), // Filter posts for the given group
+                        ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
                     }
                 },
                 { $skip: skip },
@@ -117,7 +118,8 @@ export const getPosts = async (req, res) => {
         const posts = await PostsModel.aggregate([
             {
                 $match: {
-                    owner: { $in: friendIds } // Only fetch posts from friends
+                    owner: { $in: friendIds }, // Only fetch posts from friends
+                    ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
                 }
             },
             { $sample: { size: 100 } }, // Sample a larger set to get random results
@@ -140,6 +142,7 @@ export const getPosts = async (req, res) => {
                     videoUrl: 1,
                     likes: 1,
                     likeBy: 1,
+                    savedBy: 1,
                     comments: 1,
                     shares: 1,
                     createdAt: 1,
@@ -187,6 +190,40 @@ export const likePost = async (req, res) => {
 
         res.status(200).json({
             message: alreadyLiked ? "Post unliked successfully." : "Post liked successfully.",
+            post,
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+export const savePost = async (req, res) => {
+    try {
+        const postId = req.body.id; // Assuming post ID is passed as a route param
+        const userId = req.id; // Assuming the user ID is obtained from the token/session
+
+        // Check if the post exists
+        const post = await PostsModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Check if the user has already liked the post
+        const alreadyLiked = post.savedBy.includes(userId);
+
+        if (alreadyLiked) {
+            // User has already liked, so unlike the post
+            post.savedBy = post.savedBy.filter(id => id.toString() !== userId.toString());
+        } else {
+            // User hasn't liked, so like the post
+            post.savedBy.push(userId);
+        }
+
+        // Save the post with the updated likes
+        await post.save();
+
+        res.status(200).json({
+            message: alreadyLiked ? "Post saved successfully." : "Post marked as unsaved.",
             post,
         });
     } catch (err) {
