@@ -6,7 +6,8 @@ import { groupsFoldersImages } from "../models/GroupFolderImagesModel.js";
 
 export const createGroup = (req, res) => {
     try {
-        const { name, contactNumber, email, talksAbout, description } = req.body;
+        const { name, contactNumber, email, talksAbout, description, isPrivate } = req.body;
+        console.log(isPrivate, typeof(isPrivate))
         if (!req.file) {
             res.status(400).send('No file uploaded.');
             return;
@@ -35,6 +36,7 @@ export const createGroup = (req, res) => {
                 email,
                 talksAbout,
                 description,
+                isPrivate,
                 groupImage: publicUrl,
             });
             newGroup.save()
@@ -119,6 +121,42 @@ export const joinGroup = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+export const approvePendingUser = async (req, res) => {
+    try {
+        const { groupId, userId } = req.body; // Assuming both group ID and user ID are passed in the request body
+
+        // Find the group by ID
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Check if the user is in the pendingUsers list
+        const isPendingUser = group.pendingUsers.includes(userId);
+
+        if (!isPendingUser) {
+            return res.status(400).json({ message: "User is not in the pending list for this group." });
+        }
+
+        // Remove user from pendingUsers
+        group.pendingUsers = group.pendingUsers.filter(id => id.toString() !== userId);
+
+        // Add user to joinedUsers
+        group.joinedUsers.push(userId);
+
+        // Save the updated group
+        await group.save();
+
+        return res.status(200).json({
+            message: "User has been successfully added to the group.",
+            group
+        });
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+};
+
 
 export const createFolder = (req, res) => {
     try {
@@ -359,7 +397,6 @@ export const getJoinedGroupDetails = async (req, res) => {
     try {
         const userId = req.id;  // Assuming user ID is passed in req.id
         
-        // Query to find groups where the user is in the joinedUsers array
         const joinedGroups = await groups.find(
             { joinedUsers: userId },
             'name talksAbout groupImage'  // Specify the fields to return
@@ -373,5 +410,31 @@ export const getJoinedGroupDetails = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Error retrieving group details.', error: err.message });
+    }
+};
+
+
+export const toggleGroupPrivacy = async (req, res) => {
+    try {
+        const { groupId } = req.body; // Assuming group ID is passed in the request body
+
+        // Find the group by ID
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Toggle the group's privacy status
+        group.isPrivate = !group.isPrivate;
+
+        // Save the updated group
+        await group.save();
+
+        return res.status(200).json({
+            message: group.isPrivate ? "Group is now private." : "Group is now public.",
+            group
+        });
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
     }
 };
