@@ -64,7 +64,7 @@ export const getPosts = async (req, res) => {
                 {
                     $match: {
                         group: new mongoose.Types.ObjectId(groupId), // Filter posts for the given group
-                        ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
+                        ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
                     }
                 },
                 { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
@@ -116,11 +116,14 @@ export const getPosts = async (req, res) => {
             friend.owner.equals(id) ? friend.friendId : friend.owner
         );
 
+        const posts1 = await PostsModel.find({savedBy: id})
+        console.log(posts1)
+
         const posts = await PostsModel.aggregate([
             {
                 $match: {
                     owner: { $in: friendIds }, // Only fetch posts from friends
-                    ...(isOnlySavedPost === 'true' && { savedBy: id }) // If isOnlySavedPost is true, only include saved posts
+                    ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
                 }
             },
             { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
