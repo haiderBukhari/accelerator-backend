@@ -134,6 +134,24 @@ export const getModule = async (req, res) => {
     }
 }
 
+export const getQuiz = async (req, res) => {
+    try {
+        const quizId = req.query.id;
+        if (!quizId) {
+            throw new Error("courseName is required");
+        }
+        if (!mongoose.isValidObjectId(quizId)) {
+            throw new Error("Invalid moduleId format");
+        }
+        const data = await Quiz.findById(quizId);
+        res.status(200).json({
+            quiz: data
+        })
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+}
+
 
 export const getCourseModule = async (req, res) => {
     try {
