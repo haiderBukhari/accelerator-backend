@@ -3,6 +3,7 @@ import { CourseModel } from "../models/courseModel.js";
 import { modulesModel } from "../models/moduleModel.js";
 import { bucket } from "../routes/courseRoutes.js";
 import { throwError } from "../utils/error.js";
+import { Quiz } from "../models/quizModel.js";
 
 export const addCourse = async (req, res) => {
     try {
@@ -22,16 +23,25 @@ export const addCourse = async (req, res) => {
 
 
 export const getCourses = async (req, res) => {
-    const {id} = req.query;
+    const { id } = req.query;
     try {
         let courses;
-        if(id){
-            courses = await CourseModel.find({_id: id}).lean();
-        }else{
+        
+        if (id) {
+            courses = await CourseModel.find({ _id: id }).lean();
+        } else {
             courses = await CourseModel.find().lean();
         }
-        const courseWithModules = await Promise.all(courses.map(async (course) => {
+
+        // Fetch courses with modules and quizzes
+        const courseWithModulesAndQuizzes = await Promise.all(courses.map(async (course) => {
+            // Get modules for each course
             const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort').lean();
+
+            // Get quizzes for the course
+            const quizzes = await Quiz.find({ courseId: course._id }).lean();
+
+            // Return the course with its modules and respective quizzes
             return {
                 id: course._id,
                 name: course.title,
@@ -40,18 +50,23 @@ export const getCourses = async (req, res) => {
                     name: module.name,
                     views: module.views,
                     descriptionShort: module.descriptionShort,
-                    imageLink: module.imageLink
-                }))
+                    imageLink: module.imageLink,
+                    // Attach the quizzes related to the course here
+                })),
+                quizzes: quizzes
             };
         }));
 
+        // Return the response with courses including modules and quizzes
         res.status(200).json({
-            courses: courseWithModules
+            courses: courseWithModulesAndQuizzes
         });
     } catch (err) {
-        throwError(res, 400, err.message);
+        console.error(err);
+        res.status(400).json({ error: err.message });
     }
 };
+
 
 export const uploadModule = async (req, res) => {
     try {
