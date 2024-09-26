@@ -25,6 +25,7 @@ import PaymentRoutes from "./routes/PaymentRoutes.js";
 import commentsRoutes from "./routes/commentsRoutes.js";
 import QuizRoutes from "./routes/quizRoutes.js";
 import QuizSolutionRoutes from "./routes/quizSolutionRoutes.js";
+import NotesRouter from "./routes/NotesRoutes.js";
 
 config();
 const app = express();
@@ -62,6 +63,7 @@ app.use('/api/groups-folders', groupFolderRoutes)
 app.use('/api/notification', NotificationRoutes)
 app.use('/api/quiz/solution', QuizSolutionRoutes)
 app.use('/api/quiz', QuizRoutes)
+app.use('/api/notes', NotesRouter)
 app.get('/api/messages', getAllMessages)
 
 
