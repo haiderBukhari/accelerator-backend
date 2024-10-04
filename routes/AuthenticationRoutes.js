@@ -1,5 +1,5 @@
 import express from 'express'
-import { addRecoveryEmail, changePassword, getUserData, updateProfileInformation, loginUser, registerUser, updateProfile } from '../controller/AuthenticationController.js';
+import { addRecoveryEmail, changePassword, getUserData, updateProfileInformation, loginUser, registerUser, updateProfile, getUserRanking } from '../controller/AuthenticationController.js';
 import { verifyToken } from '../utils/verifyJWT.js';
 import { Storage } from '@google-cloud/storage'
 import path from 'path'
@@ -22,6 +22,7 @@ const AuthenticationRoutes = express.Router();
 
 AuthenticationRoutes.route('/').post(registerUser).get(loginUser).patch(addRecoveryEmail).put(verifyToken, updateProfile);
 AuthenticationRoutes.route('/password').patch(changePassword)
+AuthenticationRoutes.route('/ranking').get(getUserRanking)
 AuthenticationRoutes.route('/userData').get(verifyToken, getUserData)
 AuthenticationRoutes.route('/update').put(verifyToken, upload.single('file'), updateProfileInformation)
 

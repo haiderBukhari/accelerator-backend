@@ -189,3 +189,32 @@ export const updateProfile = async (req, res) => {
         throwError(res, 400, 'Error Updating file');
     }
 }
+
+export const getUserRanking = async (req, res) => {
+    try {
+        // Fetch all users from the database
+        const users = await AuthenticationModel.find({isAdmin: false})
+        .select('firstName lastName profilePicture courseCompleted score activity _id'); // Select only the desired fields
+
+
+        // Map the users to include a `totalSum` field which is the sum of courseCompleted, score, and activity
+        const rankedUsers = users.map(user => ({
+            ...user._doc, // Spread existing user fields
+            totalSum: user.courseCompleted + user.score + user.activity // Calculate the total sum
+        }));
+
+        // Sort users based on the totalSum, in descending order
+        rankedUsers.sort((a, b) => b.totalSum - a.totalSum);
+
+        // Respond with the ranked users
+        res.status(200).json({
+            message: "Users ranked by total score",
+            users: rankedUsers
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "An error occurred while fetching the user rankings",
+            error: err.message
+        });
+    }
+};
