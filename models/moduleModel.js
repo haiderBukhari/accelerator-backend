@@ -33,6 +33,10 @@ const moduleSchema = new mongoose.Schema({
         type:Number,
         default: 0,
     },
+    isTrip: {
+        type: Boolean,
+        default: false
+    },
     completedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

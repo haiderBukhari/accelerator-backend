@@ -71,7 +71,7 @@ export const getCourses = async (req, res) => {
 
 export const uploadModule = async (req, res) => {
     try {
-        const { courseId, name, descriptionShort, descriptionLong } = req.body;
+        const { courseId, name, descriptionShort, descriptionLong, isTrip } = req.body;
         if (!courseId || !name || !descriptionLong || !descriptionShort) {
             throw new Error("All Fields are Required");
         }
@@ -103,7 +103,8 @@ export const uploadModule = async (req, res) => {
             courseId: courseId,
             name: name,
             descriptionShort: descriptionShort,
-            descriptionLong: descriptionLong
+            descriptionLong: descriptionLong,
+            isTrip: isTrip
         })
 
         res.status(200).json({
@@ -126,6 +127,27 @@ export const getModule = async (req, res) => {
         }
         const data = await modulesModel.findById(moduleId);
         data.views = data.views + 1;
+        await data.save();
+        res.status(200).json({
+            module: data
+        })
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+}
+
+
+export const tripVideo = async (req, res) => {
+    try {
+        const moduleId = req.params.id;
+        if (!moduleId) {
+            throw new Error("courseName is required");
+        }
+        if (!mongoose.isValidObjectId(moduleId)) {
+            throw new Error("Invalid moduleId format");
+        }
+        const data = await modulesModel.findById(moduleId);
+        data.isTrip = true;
         await data.save();
         res.status(200).json({
             module: data
