@@ -1,3 +1,4 @@
+import { AuthenticationModel } from "../models/AuthenticationModel.js";
 import { SubmittedQuiz } from "../models/submittedQuizModel.js";
 
 export const getQuizSubmission = async (req, res) => {
@@ -63,6 +64,10 @@ export const addQuizSubmission = async (req, res) => {
         });
 
         await newSubmission.save();
+
+        const userData = await AuthenticationModel.findById(req.id);
+        userData.score += totalNumberObtained;
+        await userData.save(); 
 
         res.status(201).json({
             success: true,

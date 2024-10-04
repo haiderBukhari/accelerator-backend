@@ -4,6 +4,7 @@ import { modulesModel } from "../models/moduleModel.js";
 import { bucket } from "../routes/courseRoutes.js";
 import { throwError } from "../utils/error.js";
 import { Quiz } from "../models/quizModel.js";
+import { AuthenticationModel } from "../models/AuthenticationModel.js";
 
 export const addCourse = async (req, res) => {
     try {
@@ -133,6 +134,39 @@ export const getModule = async (req, res) => {
         throwError(res, 400, err.message);
     }
 }
+
+export const markAsCompleted = async (req, res) => {
+    try {
+        const moduleId = req.params.id;
+        const userId = req.id;  // Assuming req.id contains the authenticated user's ID
+
+        if (!moduleId) {
+            throw new Error("Module ID is required");
+        }
+
+        if (!mongoose.isValidObjectId(moduleId)) {
+            throw new Error("Invalid moduleId format");
+        }
+
+        const data = await modulesModel.findById(moduleId);
+        if (!data) {
+            throw new Error("Module not found");
+        }
+
+        if (!data.completedBy.includes(userId)) {
+            data.completedBy.push(userId);
+            const userData = await AuthenticationModel.findById(req.id);
+            userData.courseCompleted += 1;
+            await userData.save(); 
+        }
+        await data.save();
+        res.status(200).json({
+            module: data
+        });
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+};
 
 export const getQuiz = async (req, res) => {
     try {

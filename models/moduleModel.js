@@ -32,7 +32,11 @@ const moduleSchema = new mongoose.Schema({
     views: {
         type:Number,
         default: 0,
-    }
+    },
+    completedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 }, {timestamps: true})
 
 export const modulesModel = mongoose.model('modules', moduleSchema)

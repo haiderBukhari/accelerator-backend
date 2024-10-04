@@ -78,6 +78,18 @@ const AuthenticationSchema = new mongoose.Schema({
     initialType: {
         type:String,
         default: ''
+    },
+    courseCompleted: {
+        type: Number,
+        default: 0
+    },
+    score: {
+        type: Number,
+        default: 0
+    },
+    activity: {
+        type: Number,
+        default: 0
     }
 })
 

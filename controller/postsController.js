@@ -3,6 +3,7 @@ import { friendModel } from "../models/friendModel.js";
 import { PostsModel } from "../models/Posts.js";
 import { bucket } from "../routes/PostsRoutes.js";
 import { throwError } from "../utils/error.js";
+import { AuthenticationModel } from "../models/AuthenticationModel.js";
 
 export const uploadPost = async (req, res) => {
     const { isImage, isVideo, text, groupPost, groupId } = req.body;
@@ -37,6 +38,11 @@ export const uploadPost = async (req, res) => {
                 isGroupPost: groupPost == true,
                 group: groupPost == true ? groupId: null 
             })
+
+            const userData = await AuthenticationModel.findById(req.id);
+            userData.activity += 5;
+            await userData.save(); 
+
             res.status(200).json({
                 message: 'File uploaded successfully.',
                 newPost: newPost,
@@ -256,6 +262,9 @@ export const uploadText = async (req, res) => {
         const { text, groupPost, groupId } = req.body;
         if (!text) throw new Error("Post can't be empty")
         const posts = await PostsModel.create({ owner: id, text: text, isGroupPost: groupPost == true, group: groupPost == true ? groupId: null  });
+        const userData = await AuthenticationModel.findById(req.id);
+        userData.activity += 5;
+        await userData.save(); 
         res.status(200).json({
             message: 'uploaded successfully.',
             newPost: posts,
