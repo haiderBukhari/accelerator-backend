@@ -8,11 +8,12 @@ import { AuthenticationModel } from "../models/AuthenticationModel.js";
 
 export const addCourse = async (req, res) => {
     try {
+        const {groupId} = req.query;
         const courseName = req.body.title;
         if (!courseName) {
             throw new Error("courseName is required");
         }
-        const data = await CourseModel.create({ title: courseName })
+        const data = await CourseModel.create({ title: courseName, groupId: groupId ? groupId : null })
         res.status(200).json({
             message: "Course created successfully",
             course: data
@@ -24,25 +25,23 @@ export const addCourse = async (req, res) => {
 
 
 export const getCourses = async (req, res) => {
-    const { id } = req.query;
+    const { id, groupId } = req.query;
     try {
         let courses;
         
-        if (id) {
-            courses = await CourseModel.find({ _id: id }).lean();
+        if(groupId){
+            courses = await CourseModel.find({ groupId: groupId }).lean();
+        } else if (id) {
+            courses = await CourseModel.find({ _id: id, groupId: null }).lean();
         } else {
-            courses = await CourseModel.find().lean();
+            courses = await CourseModel.find({groupId: null}).lean();
         }
 
-        // Fetch courses with modules and quizzes
         const courseWithModulesAndQuizzes = await Promise.all(courses.map(async (course) => {
-            // Get modules for each course
             const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort').lean();
 
-            // Get quizzes for the course
             const quizzes = await Quiz.find({ courseId: course._id }).lean();
 
-            // Return the course with its modules and respective quizzes
             return {
                 id: course._id,
                 name: course.title,

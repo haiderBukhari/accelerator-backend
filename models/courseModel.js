@@ -4,6 +4,10 @@ const courseSchema = new mongoose.Schema({
     title: {
         type: String,
         default: ''
+    },
+    groupId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
     }
 }, {timestamps: true})
 
