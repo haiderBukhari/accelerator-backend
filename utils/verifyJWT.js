@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { AuthenticationModel } from '../models/AuthenticationModel.js';
 
 export const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -17,6 +18,11 @@ export const verifyToken = (req, res, next) => {
     });
 };
 
-// export const onlyAdmin = (req, res, next) => {
-
-// }
+export const verifyAdmin = async(req, res, next) => {
+    const id = req.id;
+    const adminRole = await AuthenticationModel.findById(id);
+    if (!adminRole.isAdmin) {
+        return res.status(403).json({ message: 'You are not authorized to perform this action.' });
+    }
+    next();
+}

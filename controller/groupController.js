@@ -157,6 +157,35 @@ export const approvePendingUser = async (req, res) => {
     }
 };
 
+export const removeUser = async (req, res) => {
+    try {
+        const { groupId, userId } = req.query; // Assuming both group ID and user ID are passed in the request body
+
+        // Find the group by ID
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Check if the user is in the joinedUsers list
+        const isUserInGroup = group.joinedUsers.includes(userId);
+        if (!isUserInGroup) {
+            return res.status(400).json({ message: "User is not in the group." });
+        }
+        // Remove user from joinedUsers
+        group.joinedUsers = group.joinedUsers.filter(id => id.toString()!== userId);
+        await group.save();
+        return res.status(200).json({
+            message: "User has been successfully removed from the group.",
+            group
+        });
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+};
+
+
+
 
 export const createFolder = (req, res) => {
     try {

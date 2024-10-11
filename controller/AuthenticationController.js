@@ -94,7 +94,7 @@ export const changePassword = async (req, res) => {
             }
         }
         const token = jwt.sign({ id: user._id }, process.env.COOKIE_SECRET);
-        res.status(200).json({ message: "Password Change Successfully.",  id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName, isSubscriber: isSubscriber });
+        res.status(200).json({ message: "Password Change Successfully.", id: user._id, token: token, profilePicture: user.profilePicture, firstName: user.firstName, lastName: user.lastName, isSubscriber: isSubscriber });
     } catch (err) {
         throwError(res, 400, err.message);
     }
@@ -103,7 +103,7 @@ export const changePassword = async (req, res) => {
 export const getUserData = async (req, res) => {
     try {
         const authId = req.query.id || req.id;
-        if(!authId) throw new Error('id is required');
+        if (!authId) throw new Error('id is required');
         if (!mongoose.isValidObjectId(authId)) {
             throw new Error("Invalid id format");
         }
@@ -119,7 +119,8 @@ export const getUserData = async (req, res) => {
             lastName: user.lastName,
             bio: user.bio,
             aboutMe: user.aboutMe,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            isManager: user.isManager
         }
         res.status(200).json({ user: userDetails });
     } catch (err) {
@@ -161,11 +162,11 @@ export const updateProfileInformation = (req, res) => {
             res.status(200).json({
                 message: 'Profile updated successfully.',
                 profilePicture: data.profilePicture,
-                firstName: data.firstName, 
+                firstName: data.firstName,
                 lastName: data.lastName
             });
         });
-        
+
         stream.end(file.buffer);
     } catch (err) {
         throwError(res, 400, 'Error uploading file');
@@ -193,8 +194,8 @@ export const updateProfile = async (req, res) => {
 export const getUserRanking = async (req, res) => {
     try {
         // Fetch all users from the database
-        const users = await AuthenticationModel.find({isAdmin: false})
-        .select('firstName lastName profilePicture courseCompleted score activity _id'); // Select only the desired fields
+        const users = await AuthenticationModel.find({ isAdmin: false })
+            .select('firstName lastName profilePicture courseCompleted score activity _id'); // Select only the desired fields
 
 
         // Map the users to include a `totalSum` field which is the sum of courseCompleted, score, and activity
@@ -214,6 +215,79 @@ export const getUserRanking = async (req, res) => {
     } catch (err) {
         res.status(500).json({
             message: "An error occurred while fetching the user rankings",
+            error: err.message
+        });
+    }
+};
+
+
+export const addModerator = async (req, res) => {
+    const { firstName, lastName, email, password, recoveryEmail, isAdmin } = req.body;
+    try {
+        const currentDate = new Date();
+        const expirationDate = new Date(currentDate);
+        expirationDate.setFullYear(currentDate.getFullYear() + 50);
+        await AuthenticationModel.create({
+            firstName,
+            lastName,
+            email,
+            password: await hash(password),
+            recoveryEmail,
+            isAdmin: isAdmin,
+            isManager: !isAdmin,
+            isYearlySubscriber: true,
+            dateOfSubscription: currentDate,
+            dateOfUnsubscription: expirationDate
+        })
+        res.status(200).json({
+            message: "Moderator added successfully"
+        })
+    } catch (err) {
+        res.status(500).json({
+            message: "An error occurred while updating user role",
+            error: err.message
+        });
+    }
+}
+
+export const getModerators = async (req, res) => {
+    try {
+        const moderators = await AuthenticationModel.find({
+            $or: [{ isAdmin: true }, { isManager: true }],
+            _id: { $ne: req.id }
+        }).select('firstName lastName email recoveryEmail isAdmin _id');
+        
+        res.status(200).json({
+            message: "Moderators fetched successfully",
+            moderators: moderators
+        })
+    } catch (err) {
+        res.status(500).json({
+            message: "An error occurred while updating user role",
+            error: err.message
+        });
+    }
+}
+
+export const removeModerator = async (req, res) => {
+    const { id } = req.query;  // The ID of the moderator to be removed
+    try {
+        const moderator = await AuthenticationModel.findOneAndDelete({
+            _id: id
+        });
+
+        if (moderator) {
+            res.status(200).json({
+                message: "Moderator removed successfully"
+            });
+        } else {
+            res.status(404).json({
+                message: "Moderator not found or doesn't have the required role"
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "An error occurred while removing the moderator",
             error: err.message
         });
     }

@@ -17,7 +17,6 @@ const AuthenticationSchema = new mongoose.Schema({
     },
     phoneNumber: {
         type: String,
-        required: true,
     },
     password: {
         type: String,
@@ -44,6 +43,10 @@ const AuthenticationSchema = new mongoose.Schema({
         default: ''
     },
     isAdmin: {
+        type: Boolean,
+        default: false
+    },
+    isManager: {
         type: Boolean,
         default: false
     },

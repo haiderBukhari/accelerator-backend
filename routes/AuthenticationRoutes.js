@@ -1,6 +1,6 @@
 import express from 'express'
-import { addRecoveryEmail, changePassword, getUserData, updateProfileInformation, loginUser, registerUser, updateProfile, getUserRanking } from '../controller/AuthenticationController.js';
-import { verifyToken } from '../utils/verifyJWT.js';
+import { addRecoveryEmail, changePassword, getUserData, updateProfileInformation, loginUser, registerUser, updateProfile, getUserRanking, addModerator, getModerators, removeModerator } from '../controller/AuthenticationController.js';
+import { verifyAdmin, verifyToken } from '../utils/verifyJWT.js';
 import { Storage } from '@google-cloud/storage'
 import path from 'path'
 import multer from 'multer';
@@ -24,6 +24,7 @@ AuthenticationRoutes.route('/').post(registerUser).get(loginUser).patch(addRecov
 AuthenticationRoutes.route('/password').patch(changePassword)
 AuthenticationRoutes.route('/ranking').get(getUserRanking)
 AuthenticationRoutes.route('/userData').get(verifyToken, getUserData)
+AuthenticationRoutes.route('/moderator').get(verifyToken, verifyAdmin, getModerators).post(verifyToken,verifyAdmin, addModerator).delete(verifyToken,verifyAdmin, removeModerator)
 AuthenticationRoutes.route('/update').put(verifyToken, upload.single('file'), updateProfileInformation)
 
 export default AuthenticationRoutes;
