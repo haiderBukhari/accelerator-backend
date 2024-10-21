@@ -109,26 +109,10 @@ export const getPosts = async (req, res) => {
             return res.status(200).json(groupPosts);
         }
 
-        // If groupId is not provided, fetch posts from friends
-        const friends = await friendModel.find({
-            $or: [
-                { owner: id },
-                { friendId: id }
-            ],
-            isfriendAccepted: true
-        });
-
-        const friendIds = friends.map(friend =>
-            friend.owner.equals(id) ? friend.friendId : friend.owner
-        );
-
-        const posts1 = await PostsModel.find({savedBy: id})
-        console.log(posts1)
-
+        // If groupId is not provided, fetch posts from all users
         const posts = await PostsModel.aggregate([
             {
                 $match: {
-                    owner: { $in: friendIds }, // Only fetch posts from friends
                     ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
                 }
             },

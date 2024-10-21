@@ -32,7 +32,8 @@ export const getFriendList = async (req, res) => {
                 ...query,
                 $or: [
                     { firstName: { $regex: new RegExp(name, 'i') } },
-                    { lastName: { $regex: new RegExp(name, 'i') } }
+                    { lastName: { $regex: new RegExp(name, 'i') } },
+                    { email: { $regex: new RegExp(name, 'i') } },
                 ]
             };
         }

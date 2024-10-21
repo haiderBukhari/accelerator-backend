@@ -34,7 +34,7 @@ export const registerUser = async (req, res) => {
         await user.save();
         res.status(201).json({ message: "User registered successfully.", id: user._id });
     } catch (err) {
-        throwError(res, 400, err.message);
+        throwError(res, 400, "Please use a different email or sign in to your existing account");
     }
 }
 
