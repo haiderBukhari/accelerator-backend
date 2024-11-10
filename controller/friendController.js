@@ -28,17 +28,39 @@ export const getFriendList = async (req, res) => {
 
         // Add name filter if name query parameter is present
         if (name) {
-            query = {
-                ...query,
-                $or: [
-                    { firstName: { $regex: new RegExp(name, 'i') } },
-                    { lastName: { $regex: new RegExp(name, 'i') } },
-                    { email: { $regex: new RegExp(name, 'i') } },
-                ]
-            };
+            const nameParts = name.trim().split(' '); // Split the input by spaces
+            
+            if (nameParts.length === 2) {
+                // If there are two parts, assume first and last name
+                const [firstNamePart, lastNamePart] = nameParts;
+        
+                query = {
+                    ...query,
+                    $or: [
+                        {
+                            $and: [
+                                { firstName: { $regex: new RegExp(firstNamePart, 'i') } },
+                                { lastName: { $regex: new RegExp(lastNamePart, 'i') } }
+                            ]
+                        },
+                        { email: { $regex: new RegExp(name, 'i') } }
+                    ]
+                };
+            } else {
+                // If there's only one part, search for it in both firstName and lastName
+                const singleNameRegex = new RegExp(nameParts[0], 'i');
+        
+                query = {
+                    ...query,
+                    $or: [
+                        { firstName: { $regex: singleNameRegex } },
+                        { lastName: { $regex: singleNameRegex } },
+                        { email: { $regex: singleNameRegex } }
+                    ]
+                };
+            }
         }
-
-        // Count total documents with the given query
+                // Count total documents with the given query
         const documentList = await AuthenticationModel.countDocuments(query);
 
         // Fetch the list of users based on the query with pagination

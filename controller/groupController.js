@@ -51,6 +51,78 @@ export const createGroup = (req, res) => {
     }
 }
 
+export const addProfilePicture = (req, res) => {
+    try {
+        const { groupId } = req.body;
+        if (!req.file) {
+            res.status(400).send('No file uploaded.');
+            return;
+        }
+
+        const file = req.file;
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const fileUpload = bucket.file(fileName);
+
+        const stream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+            },
+        });
+
+        stream.on('error', err => {
+            console.error('Error uploading to GCS:', err);
+            res.status(500).send('Error uploading file.');
+        });
+
+        stream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            await groups.findByIdAndUpdate(groupId, { groupImage: publicUrl }, { new: true });
+            res.status(200).json({ groupImage: publicUrl })
+        });
+
+        stream.end(file.buffer); // Write file buffer to stream
+    } catch (err) {
+        console.log(err.message)
+        res.status(400).json({ message: 'Failed to create group', error: err })
+    }
+}
+
+export const addBackgroundPicture = (req, res) => {
+    try {
+        const { groupId } = req.body;
+        if (!req.file) {
+            res.status(400).send('No file uploaded.');
+            return;
+        }
+
+        const file = req.file;
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const fileUpload = bucket.file(fileName);
+
+        const stream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+            },
+        });
+
+        stream.on('error', err => {
+            console.error('Error uploading to GCS:', err);
+            res.status(500).send('Error uploading file.');
+        });
+
+        stream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            await groups.findByIdAndUpdate(groupId, { backgroundImage: publicUrl }, { new: true });
+            res.status(200).json({ groupImage: publicUrl })
+        });
+
+        stream.end(file.buffer); // Write file buffer to stream
+    } catch (err) {
+        console.log(err.message)
+        res.status(400).json({ message: 'Failed to create group', error: err })
+    }
+}
+
 export const getGroups = (req, res) => {
     groups.find()
         .then((data) => res.status(200).json({ message: 'Groups fetched successfully', data: data }))
@@ -150,6 +222,41 @@ export const approvePendingUser = async (req, res) => {
 
         return res.status(200).json({
             message: "User has been successfully added to the group.",
+            group
+        });
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+};
+
+export const likeGroup = async (req, res) => {
+    try {
+        const groupId = req.params.id;
+        const userId = req.id;
+
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        const likeBy = group.likeBy.includes(userId);
+
+        if (!likeBy) {
+            group.likeBy.push(userId);
+            group.likes = group.likes + 1;
+            await group.save();
+            return res.status(200).json({
+                message: "Successfully liked the group.",
+                group: group,
+            });
+        }
+
+        group.likeBy = group.likeBy.filter(id => id.toString() !== userId);
+        group.likes = group.likes - 1;
+        await group.save();
+
+        return res.status(200).json({
+            message: "Like Removed.",
             group
         });
     } catch (err) {

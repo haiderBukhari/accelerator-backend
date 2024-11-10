@@ -5,6 +5,7 @@ import { bucket } from "../routes/courseRoutes.js";
 import { throwError } from "../utils/error.js";
 import { Quiz } from "../models/quizModel.js";
 import { AuthenticationModel } from "../models/AuthenticationModel.js";
+import { uploadModuleEmail } from "../utils/ModuleUpload.js";
 
 export const addCourse = async (req, res) => {
     try {
@@ -38,7 +39,7 @@ export const getCourses = async (req, res) => {
         }
 
         const courseWithModulesAndQuizzes = await Promise.all(courses.map(async (course) => {
-            const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort').lean();
+            const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort isTrip').lean();
 
             const quizzes = await Quiz.find({ courseId: course._id }).lean();
 
@@ -51,6 +52,7 @@ export const getCourses = async (req, res) => {
                     views: module.views,
                     descriptionShort: module.descriptionShort,
                     imageLink: module.imageLink,
+                    isTrip: module.isTrip,
                     // Attach the quizzes related to the course here
                 })),
                 quizzes: quizzes
@@ -70,7 +72,7 @@ export const getCourses = async (req, res) => {
 
 export const uploadModule = async (req, res) => {
     try {
-        const { courseId, name, descriptionShort, descriptionLong, isTrip } = req.body;
+        const { courseId, name, descriptionShort, descriptionLong } = req.body;
         if (!courseId || !name || !descriptionLong || !descriptionShort) {
             throw new Error("All Fields are Required");
         }
@@ -103,7 +105,7 @@ export const uploadModule = async (req, res) => {
             name: name,
             descriptionShort: descriptionShort,
             descriptionLong: descriptionLong,
-            isTrip: isTrip
+            isTrip: false
         })
 
         res.status(200).json({
@@ -148,6 +150,10 @@ export const tripVideo = async (req, res) => {
         const data = await modulesModel.findById(moduleId);
         data.isTrip = true;
         await data.save();
+        const userData = await AuthenticationModel.find();
+        userData.forEach(async (user) => {
+            await uploadModuleEmail(user.email, user.firstName, data.name);
+        })
         res.status(200).json({
             module: data
         })
