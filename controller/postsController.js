@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { friendModel } from "../models/friendModel.js";
+import {groups} from '../models/groupModel.js'
 import { PostsModel } from "../models/Posts.js";
 import { bucket } from "../routes/PostsRoutes.js";
 import { throwError } from "../utils/error.js";
@@ -86,6 +87,15 @@ export const getPosts = async (req, res) => {
                 },
                 { $unwind: '$userInfo' }, // Unwind to deconstruct the array from lookup
                 {
+                    $lookup: {
+                        from: 'groups', // Include group details
+                        localField: 'group',
+                        foreignField: '_id',
+                        as: 'groupInfo'
+                    }
+                },
+                { $unwind: { path: '$groupInfo', preserveNullAndEmptyArrays: true } }, // Unwind groupInfo, preserving null/empty arrays
+                {
                     $project: {
                         _id: 1,
                         text: 1,
@@ -98,10 +108,12 @@ export const getPosts = async (req, res) => {
                         createdAt: 1,
                         updatedAt: 1,
                         owner: 1,
+                        group: 1,
                         'userInfo.firstName': 1,
                         'userInfo.lastName': 1,
                         'userInfo.profilePicture': 1,
-                        'userInfo._id': 1
+                        'userInfo._id': 1,
+                        'groupInfo.name': { $ifNull: ['$groupInfo.name', ''] }, // Project groupName, defaulting to empty string if null
                     }
                 }
             ]);
@@ -129,12 +141,22 @@ export const getPosts = async (req, res) => {
             },
             { $unwind: '$userInfo' }, // Unwind to deconstruct the array from lookup
             {
+                $lookup: {
+                    from: 'groups', // Include group details
+                    localField: 'group',
+                    foreignField: '_id',
+                    as: 'groupInfo'
+                }
+            },
+            { $unwind: { path: '$groupInfo', preserveNullAndEmptyArrays: true } }, // Unwind groupInfo, preserving null/empty arrays
+            {
                 $project: {
                     _id: 1,
                     text: 1,
                     imageUrl: 1,
                     videoUrl: 1,
                     likes: 1,
+                    group: 1,
                     likeBy: 1,
                     savedBy: 1,
                     comments: 1,
@@ -144,7 +166,8 @@ export const getPosts = async (req, res) => {
                     owner: 1,
                     'userInfo.firstName': 1,
                     'userInfo.lastName': 1,
-                    'userInfo.profilePicture': 1
+                    'userInfo.profilePicture': 1,
+                    'groupInfo.name': { $ifNull: ['$groupInfo.name', ''] }, // Project groupName, defaulting to empty string if null
                 }
             }
         ]);
@@ -154,7 +177,6 @@ export const getPosts = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
-
 
 export const likePost = async (req, res) => {
     try {
