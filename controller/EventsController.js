@@ -1,25 +1,53 @@
 import { EventModel } from "../models/eventsModel.js";
 import { throwError } from "../utils/error.js";
+import { bucket } from "../routes/eventsRoutes.js";
 
 export const createEvent = async (req, res) => {
     try {
         const { name, description, startDate, endDate, eventType, address, joiningLink } = req.body;
+        if (!req.file) {
+            res.status(400).send('No file uploaded.');
+            return;
+        }
+
         if (!name || !description || !startDate || !endDate || !eventType) {
             throw new Error("Alll Fields are Required");
         }
-        const data = await EventModel.create({
-            name,
-            description,
-            startDate,
-            endDate,
-            eventType,
-            address,
-            joiningLink
-        })
-        res.status(200).json({
-            message: "Event Created Successfully",
-            events: data
-        })
+
+        const file = req.file;
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const fileUpload = bucket.file(fileName);
+
+        const stream = fileUpload.createWriteStream({
+            metadata: {
+                contentType: file.mimetype,
+            },
+        });
+
+        stream.on('error', err => {
+            console.error('Error uploading to GCS:', err);
+            res.status(500).send('Error uploading file.');
+        });
+
+        stream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+            const data = await EventModel.create({
+                name,
+                description,
+                startDate,
+                endDate,
+                eventType,
+                address,
+                joiningLink,
+                backgroundImage: publicUrl
+            })
+            res.status(200).json({
+                message: "Event Created Successfully",
+                events: data
+            })
+        });
+
+        stream.end(file.buffer); // Write file buffer to stream
     } catch (err) {
         throwError(res, 400, err.message);
     }

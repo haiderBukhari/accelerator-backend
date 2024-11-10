@@ -10,7 +10,7 @@ export const getFriendList = async (req, res) => {
     const skip = (currentPage - 1) * pageSize;
 
     try {
-        // Fetch friends
+        // Find all friend relationships for the current user
         const friends = await friendModel.find({
             $or: [
                 { owner: new mongoose.Types.ObjectId(req.id) },
@@ -18,22 +18,36 @@ export const getFriendList = async (req, res) => {
             ]
         });
 
-        const friendIds = friends?.map(friend => friend.friendId.toString() === req.id ? friend.owner : friend.friendId);
-        
-        // Build query object
+        // Create maps to store friendship and request status
+        const friendMap = {};
+        const requestMap = {};
+
+        friends.forEach(friend => {
+            const isOwner = friend.owner.toString() === req.id;
+            const otherId = isOwner ? friend.friendId.toString() : friend.owner.toString();
+
+            if (friend.isfriendAccepted) {
+                friendMap[otherId] = true; // Mark as friend
+            } else {
+                if (isOwner) {
+                    requestMap[otherId] = "isFriendRequestSent"; // Friend request sent by current user
+                } else {
+                    requestMap[otherId] = "noAcceptFriendRequest"; // Friend request received by current user
+                }
+            }
+        });
+
+        // Build the query object
         let query = {
-            _id: { $ne: req.id, $nin: friendIds },
-            isAdmin: false
+            _id: { $ne: req.id },
         };
 
-        // Add name filter if name query parameter is present
         if (name) {
             const nameParts = name.trim().split(' '); // Split the input by spaces
-            
+
             if (nameParts.length === 2) {
-                // If there are two parts, assume first and last name
                 const [firstNamePart, lastNamePart] = nameParts;
-        
+
                 query = {
                     ...query,
                     $or: [
@@ -47,9 +61,8 @@ export const getFriendList = async (req, res) => {
                     ]
                 };
             } else {
-                // If there's only one part, search for it in both firstName and lastName
                 const singleNameRegex = new RegExp(nameParts[0], 'i');
-        
+
                 query = {
                     ...query,
                     $or: [
@@ -60,11 +73,12 @@ export const getFriendList = async (req, res) => {
                 };
             }
         }
-                // Count total documents with the given query
+
+
         const documentList = await AuthenticationModel.countDocuments(query);
 
         // Fetch the list of users based on the query with pagination
-        const nonFriends = await AuthenticationModel.find(query, {
+        const users = await AuthenticationModel.find(query, {
             _id: 1,
             firstName: 1,
             lastName: 1,
@@ -72,7 +86,18 @@ export const getFriendList = async (req, res) => {
             profilePicture: 1
         }).skip(skip).limit(pageSize);
 
-        // Count pending friends
+        // Add friendship status to each user
+        const nonFriends = users.map(user => {
+            const userId = user._id.toString();
+            return {
+                ...user.toObject(),
+                isFriend: friendMap[userId] || false,
+                isFriendRequestSent: requestMap[userId] === "isFriendRequestSent",
+                noAcceptFriendRequest: requestMap[userId] === "noAcceptFriendRequest"
+            };
+        });
+
+        // Count pending friend requests received by the user
         const pendingFriends = await friendModel.countDocuments({
             friendId: new mongoose.Types.ObjectId(req.id),
             isfriendAccepted: false
@@ -84,7 +109,7 @@ export const getFriendList = async (req, res) => {
             pendingFriends: pendingFriends
         });
     } catch (err) {
-        throwError(res, 400, err.message);
+        res.status(400).json({ error: err.message });
     }
 };
 
@@ -125,7 +150,14 @@ export const acceptFriendRequest = async (req, res) => {
 export const declineFriendRequest = async (req, res) => {
     try {
         const { owner, friendId } = req.query;
-        await friendModel.findOneAndDelete({ owner: owner, friendId: friendId }, { isfriendAccepted: true });
+        await friendModel.findOneAndDelete({ $or: [
+            {
+                owner: owner, friendId: friendId
+            },
+            {
+                owner: friendId, friendId: owner 
+            }
+        ] }, { isfriendAccepted: true });
         res.status(200).json({
             message: "Friend Request Accepted",
         })
