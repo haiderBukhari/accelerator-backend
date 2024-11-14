@@ -63,6 +63,8 @@ export const addRecoveryEmail = async (req, res) => {
 
     try {
         const authId = req.body.id;
+        const existingUser = await AuthenticationModel.findOne({ recoveryEmail: req.body.recoveryEmail });
+        if (existingUser) throw new Error("Recovery Email already linked to another account.");
         const user = await AuthenticationModel.findByIdAndUpdate(authId, { recoveryEmail: req.body.recoveryEmail, isRecoveryEmailAdded: true }, { new: true });
         let isSubscriber = false;
         const currentDate = new Date();

@@ -1,5 +1,5 @@
 import express from 'express'
-import { addAttendee, createEvent, getUpcomingEvents } from '../controller/EventsController.js';
+import { addAttendee, createEvent, deleteEvent, getUpcomingEvents } from '../controller/EventsController.js';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import multer from 'multer';
@@ -17,6 +17,6 @@ const storage = new Storage({
 const bucketName = 'groups-data-101';
 export const bucket = storage.bucket(bucketName);
 
-eventsRoutes.route('/').get(getUpcomingEvents).post(upload.single('file'), createEvent).patch(addAttendee);
+eventsRoutes.route('/').get(getUpcomingEvents).post(upload.single('file'), createEvent).patch(addAttendee).delete(deleteEvent);
 
 export default eventsRoutes;

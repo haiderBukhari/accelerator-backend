@@ -80,10 +80,26 @@ export const addAttendee = async (req, res) => {
     try {
         const events = await EventModel.findById(eventId);
         if (!events) throw new Error("Event not found");
+        if (events.attendingPeoples.includes(attendeeId)) throw new Error("Already Attending");
         events.attendingPeoples.push(attendeeId);
         await events.save();
         res.status(200).json({
             events: {...events, attending: true},
+        });
+    } catch (err) {
+        throwError(res, 400, err.message);
+    }
+}
+
+// delete the event
+export const deleteEvent = async (req, res) => {
+    try {
+        const eventId = req.query.id;
+        const events = await EventModel.findByIdAndDelete(eventId);
+        if (!events) throw new Error("Event not found");
+        res.status(200).json({
+            message: "Event deleted successfully",
+            events: events
         });
     } catch (err) {
         throwError(res, 400, err.message);
