@@ -5,6 +5,10 @@ const PostsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
+    isPinedPost: {
+        type: Boolean,
+        default: false
+    },
     text: {
         type: String,
         default: ''

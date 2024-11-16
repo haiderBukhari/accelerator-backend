@@ -3,6 +3,7 @@ import { groups } from "../models/groupModel.js";
 import { groupsFolders } from "../models/GroupsFolders.js";
 import { bucket } from "../routes/groupRoutes.js";
 import { groupsFoldersImages } from "../models/GroupFolderImagesModel.js";
+import { PostsModel } from "../models/Posts.js";
 
 export const createGroup = (req, res) => {
     try {
@@ -129,12 +130,37 @@ export const getGroups = (req, res) => {
         .catch((err) => res.status(500).json({ message: 'Failed to fetch groups', error: err }))
 }
 
-export const getSpecificGroup = (req, res) => {
+export const getSpecificGroup = async (req, res) => {
     const { id } = req.params;
-    groups.findById(id)
-        .then((data) => res.status(200).json({ message: 'Group fetched successfully', details: data }))
-        .catch((err) => res.status(500).json({ message: 'Failed to fetch group', error: err }))
+    try{
+        const group = await groups.findById(id);
+        if(!group){
+            return res.status(404).json({ message: 'Group not found' })
+        }
+        res.status(200).json({ message: 'Group fetched successfully', details: group })
+    }catch(err){
+        res.status(500).json({ message: 'Failed to fetch group', error: err })
+    }
 }
+
+export const togglePin = async (req, res) => {
+    const { id } = req.params;
+    try{
+        const group = await PostsModel.findById(id);
+        if(!group){
+            return res.status(404).json({ message: 'Post not found' })
+        }
+        if(group.isPinedPost!==false && group.isPinedPost !== true){
+            group.isPinedPost = true;
+        }else{
+            group.isPinedPost = !group.isPinedPost;
+        }
+        await group.save();
+        res.status(200).json({ message: 'Group updated' })
+    }catch(err){
+        res.status(500).json({ message: 'Failed to fetch group', error: err })
+    }
+} 
 
 export const joinGroup = async (req, res) => {
     try {

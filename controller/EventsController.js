@@ -1,6 +1,7 @@
 import { EventModel } from "../models/eventsModel.js";
 import { throwError } from "../utils/error.js";
 import { bucket } from "../routes/eventsRoutes.js";
+import { AuthenticationModel } from "../models/AuthenticationModel.js";
 
 export const createEvent = async (req, res) => {
     try {
@@ -53,17 +54,36 @@ export const createEvent = async (req, res) => {
     }
 }
 
-export const getUpcomingEvents = async (req, res) => {
-    console.log(req.id);
+export const getUpcomingEvents = async (req, res) => { 
     try {
         const today = new Date();
+        
+        // Fetch upcoming events
         const events = await EventModel.find({ endDate: { $gt: today } });
+        
+        const updatedEvents = await Promise.all(
+            events.map(async (event) => {
+                const attendees = await AuthenticationModel.find({
+                    _id: { $in: event.attendingPeoples }
+                }, "firstName lastName profilePicture"); // Select specific fields
 
-        // Check if the user is attending each event
-        const updatedEvents = events.map(event => ({
-            ...event.toObject(),
-            attending: event.attendingPeoples.includes(req.id)
-        }));
+                return {
+                    id: event._id,
+                    name: event.name,
+                    backgroundImage: event.backgroundImage,
+                    description: event.description,
+                    startDate: event.startDate,
+                    endDate: event.endDate,
+                    eventType: event.eventType,
+                    joiningLink: event.joiningLink,
+                    address: event.address,
+                    likes: event.likes,
+                    peopleAttending: event.peopleAttending,
+                    attending: event.attendingPeoples.includes(req.id),
+                    attendees // List of attendee objects with name, ID, and profile picture
+                };
+            })
+        );
 
         res.status(200).json({
             message: "Upcoming Events Retrieved Successfully",

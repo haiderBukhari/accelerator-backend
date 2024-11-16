@@ -74,7 +74,7 @@ export const getPosts = async (req, res) => {
                         ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
                     }
                 },
-                { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
+                { $sort: { isPinedPost: -1, createdAt: -1 } }, // Sort by isPinedPost and then by createdAt
                 { $skip: skip },
                 { $limit: pageSize },
                 {
@@ -105,22 +105,25 @@ export const getPosts = async (req, res) => {
                         likeBy: 1,
                         comments: 1,
                         shares: 1,
+                        savedBy: 1,
                         createdAt: 1,
                         updatedAt: 1,
                         owner: 1,
                         group: 1,
+                        isPinedPost: 1, // Explicitly include this field
                         'userInfo.firstName': 1,
                         'userInfo.lastName': 1,
                         'userInfo.profilePicture': 1,
                         'userInfo._id': 1,
-                        'groupInfo.name': { $ifNull: ['$groupInfo.name', ''] }, // Project groupName, defaulting to empty string if null
+                        'groupInfo.name': { $ifNull: ['$groupInfo.name', ''] } // Project groupName, defaulting to empty string if null
                     }
                 }
             ]);
 
+            console.log(groupPosts)
             return res.status(200).json(groupPosts);
         }
-
+        
         // If groupId is not provided, fetch posts from all users
         const posts = await PostsModel.aggregate([
             {
@@ -128,7 +131,7 @@ export const getPosts = async (req, res) => {
                     ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
                 }
             },
-            { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
+            { $sort: { isPinedPost: -1, createdAt: -1 } }, // Sort by isPinedPost and then by createdAt
             { $skip: skip },
             { $limit: pageSize },
             {
@@ -164,6 +167,7 @@ export const getPosts = async (req, res) => {
                     createdAt: 1,
                     updatedAt: 1,
                     owner: 1,
+                    isPinedPost: 1,
                     'userInfo.firstName': 1,
                     'userInfo.lastName': 1,
                     'userInfo.profilePicture': 1,
@@ -171,6 +175,7 @@ export const getPosts = async (req, res) => {
                 }
             }
         ]);
+
 
         res.status(200).json(posts);
     } catch (err) {
