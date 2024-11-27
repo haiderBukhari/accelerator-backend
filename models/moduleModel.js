@@ -35,7 +35,11 @@ const moduleSchema = new mongoose.Schema({
     },
     isTrip: {
         type: Boolean,
-        default: false
+        default: true
+    },
+    unLockDays: {
+        type: Number,
+        default: ''
     },
     completedBy: [{
         type: mongoose.Schema.Types.ObjectId,

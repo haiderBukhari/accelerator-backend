@@ -122,7 +122,8 @@ export const getUserData = async (req, res) => {
             bio: user.bio,
             aboutMe: user.aboutMe,
             isAdmin: user.isAdmin,
-            isManager: user.isManager
+            isManager: user.isManager,
+            createdAt: user.createdAt
         }
         res.status(200).json({ user: userDetails });
     } catch (err) {

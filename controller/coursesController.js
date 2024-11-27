@@ -24,7 +24,6 @@ export const addCourse = async (req, res) => {
     }
 }
 
-
 export const getCourses = async (req, res) => {
     const { id, groupId } = req.query;
     try {
@@ -39,7 +38,7 @@ export const getCourses = async (req, res) => {
         }
 
         const courseWithModulesAndQuizzes = await Promise.all(courses.map(async (course) => {
-            const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort isTrip').lean();
+            const modules = await modulesModel.find({ courseId: course._id }, 'id name views imageLink descriptionShort isTrip unLockDays').lean();
 
             const quizzes = await Quiz.find({ courseId: course._id }).lean();
 
@@ -53,6 +52,7 @@ export const getCourses = async (req, res) => {
                     descriptionShort: module.descriptionShort,
                     imageLink: module.imageLink,
                     isTrip: module.isTrip,
+                    unLockDays: module.unLockDays,
                     // Attach the quizzes related to the course here
                 })),
                 quizzes: quizzes
@@ -231,6 +231,36 @@ export const getCourseModule = async (req, res) => {
         throwError(res, 400, err.message);
     }
 }
+
+export const updateUnlockTimes = async (req, res) => {
+    try {
+        const {updates} = req.body;
+        
+        if (!Array.isArray(updates)) {
+            throw new Error("Invalid input. Expected an array of updates.");
+        }
+
+        for (const update of updates) {
+            if (!update.id || !mongoose.isValidObjectId(update.id)) {
+                throw new Error(`Invalid module ID: ${update.id}`);
+            }
+        }
+
+        const updatePromises = updates.map(({ id, unLockDays }) => 
+            modulesModel.findByIdAndUpdate(id, { unLockDays: unLockDays }, { new: true })
+        );
+
+        const updatedModules = await Promise.all(updatePromises);
+
+        res.status(200).json({
+            message: "Unlock times updated successfully",
+            updatedModules
+        });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
 
 export const deleteCourse = async (req, res) => {
     try {

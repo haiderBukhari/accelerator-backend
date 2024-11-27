@@ -32,7 +32,7 @@ export const uploadModuleEmail = async (email1, name, line) => {
     const email = {
         body: {
             name: name,
-            intro: `New Module ${line} is Uploaded`,
+            intro: `Module ${line} has been Unlocked`,
         },
     };
 
@@ -41,7 +41,7 @@ export const uploadModuleEmail = async (email1, name, line) => {
     const mailOptions = {
         from: process.env.SERVICE,
         to: email1,
-        subject: "Accelerator: New Module Uploaded",
+        subject: "Accelerator: New Module Unlocked",
         html: emailBody,
     };
 

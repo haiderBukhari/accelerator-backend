@@ -1,4 +1,5 @@
 import express from "express"
+import cron from "node-cron";
 import cookieParser from "cookie-parser"
 import morgan from "morgan"
 import AuthenticationRoutes from "./routes/AuthenticationRoutes.js";
@@ -26,6 +27,8 @@ import commentsRoutes from "./routes/commentsRoutes.js";
 import QuizRoutes from "./routes/quizRoutes.js";
 import QuizSolutionRoutes from "./routes/quizSolutionRoutes.js";
 import NotesRouter from "./routes/NotesRoutes.js";
+import { modulesModel } from "./models/moduleModel.js";
+import { uploadModuleEmail } from "./utils/ModuleUpload.js";
 
 config();
 const app = express();
@@ -114,6 +117,48 @@ io.on('connection', (socket) => {
             console.log("User Disconnected ", socket.id);
         });
     });
+});
+
+const isUnlockable = (createdAt, unLockDays) => {
+    const userJoinDate = new Date(createdAt);
+    userJoinDate.setHours(0, 0, 0, 0);
+
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    const daysSinceJoining = Math.floor((currentDate - userJoinDate) / (1000 * 60 * 60 * 24));
+    return daysSinceJoining == unLockDays;
+};
+
+// Cron job to run every day at midnight
+cron.schedule("0 0 * * *", async () => {
+    console.log("Running daily unlock check...");
+
+    try {
+        const users = await AuthenticationModel.find({}, "firstName email createdAt");
+        if (!users || users.length === 0) {
+            console.log("No users found.");
+            return;
+        }
+
+        for (const user of users) {
+            if (!user.createdAt) continue;
+
+            const modules = await modulesModel.find({}, "name unLockDays");
+            if (!modules || modules.length === 0) {
+                console.log("No modules found.");
+                return;
+            }
+
+            for (const module of modules) {
+                if (isUnlockable(user.createdAt, module.unLockDays)) {
+                    await uploadModuleEmail(user.email, user.firstName, module.name);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error running cron job:", error.message);
+    }
 });
 
 app.get('*', (req, res) => {
