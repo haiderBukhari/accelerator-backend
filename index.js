@@ -29,6 +29,7 @@ import QuizSolutionRoutes from "./routes/quizSolutionRoutes.js";
 import NotesRouter from "./routes/NotesRoutes.js";
 import { modulesModel } from "./models/moduleModel.js";
 import { uploadModuleEmail } from "./utils/ModuleUpload.js";
+import embeddingRouter from "./routes/EmbeddingRoutes.js";
 
 config();
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/notification', NotificationRoutes)
 app.use('/api/quiz/solution', QuizSolutionRoutes)
 app.use('/api/quiz', QuizRoutes)
 app.use('/api/notes', NotesRouter)
+app.use('/api/embedded-html', embeddingRouter)
 app.get('/api/messages', getAllMessages)
 
 
