@@ -143,6 +143,19 @@ export const getSpecificGroup = async (req, res) => {
     }
 }
 
+export const deleteSpecificGroup = async (req, res) => {
+    const { id } = req.params;
+    try{
+        const group = await groups.findByIdAndDelete(id);
+        if(!group){
+            return res.status(404).json({ message: 'Group not found' })
+        }
+        res.status(200).json({ message: 'Group fetched successfully', details: group })
+    }catch(err){
+        res.status(500).json({ message: 'Failed to fetch group', error: err })
+    }
+}
+
 export const togglePin = async (req, res) => {
     const { id } = req.params;
     try{
@@ -265,8 +278,13 @@ export const likeGroup = async (req, res) => {
             return res.status(404).json({ message: "Group not found" });
         }
 
-        const likeBy = group.likeBy.includes(userId);
+        if(!group.likeBy.length) {
+            group.likeBy = [];
+            group.likes = 0;
+        }
 
+        const likeBy = group.likeBy.includes(userId);
+        
         if (!likeBy) {
             group.likeBy.push(userId);
             group.likes = group.likes + 1;
@@ -286,6 +304,7 @@ export const likeGroup = async (req, res) => {
             group
         });
     } catch (err) {
+        console.log(err.message)
         return res.status(500).json({ message: err.message });
     }
 };

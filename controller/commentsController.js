@@ -1,10 +1,10 @@
 import { commentsModel } from "../models/comments.js";
+import { PostsModel } from "../models/Posts.js";
 
 export const createComment = async (req, res) => {
     try {
         const { postId, owner, name, comment, userImage } = req.body; // Input data from request
 
-        // Create a new comment object with an empty replies array
         const newComment = {
             postId,
             owner,
@@ -14,7 +14,10 @@ export const createComment = async (req, res) => {
             replies: []
         };
 
-        const post = await commentsModel.create(newComment)
+        await commentsModel.create(newComment)
+        const post = await PostsModel.findById(postId);
+        post.comments  = post.comments + 1;
+        await post.save();
 
         return res.status(200).json({
             message: "Comment added successfully"

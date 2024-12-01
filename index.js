@@ -92,31 +92,52 @@ io.on('connection', (socket) => {
         await data.save();
 
         console.log(`User Connected with UserId of ${decoded.id}, socket.id: ${socket.id}`);
-        
+
         socket.on('connect_error', (err) => {
             console.error("Connection Error: ", err.message);
         });
 
-        socket.on('send_message', async ({message, id}) => {
-            console.log(`message recived from ${data.firstName} ${message}`)
+        socket.on('send_message', async ({ message, id }) => {
+            console.log(`message received from ${data.firstName} ${message}`);
+
             const data1 = await AuthenticationModel.findById(id);
             const newMessage = new MessagesModel({
                 senderId: data._id,
                 receiverId: id,
-                message: message
+                message: message,
+                status: data1.socketId ? "read" : "delivered"
             });
+
             await newMessage.save();
+
             await NotificationsModel.create({
                 userId: id,
                 message: `${data.firstName} ${data.lastName} sent you a message`,
                 createdAt: new Date()
-            })    
-            io.to(data1.socketId).emit('recieve_message', message);
-            io.to(data.socketId).emit('recieve_message', message);
+            });
+
+            io.to(data1.socketId).emit('recieve_message', { message, status: 'delivered' });
+            io.to(data.socketId).emit('recieve_message', { message, status: 'delivered' });
         });
 
-        socket.on('disconnect', () => {
+        socket.on('message_read', async ({userId}) => {
+            console.log("userId", userId)
+            const messages = await MessagesModel.find({receiverId: userId, status: "delivered" });
+
+            messages.forEach(async (message) => {
+                if (message.status === 'read') {
+                } else {
+                    message.status = 'read';
+                    await message.save();
+                }
+            })
+        });
+        socket.on('disconnect', async () => {
             console.log("User Disconnected ", socket.id);
+            if (data) {
+                data.socketId = null;
+                await data.save();
+            }
         });
     });
 });

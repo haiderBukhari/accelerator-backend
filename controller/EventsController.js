@@ -5,7 +5,7 @@ import { AuthenticationModel } from "../models/AuthenticationModel.js";
 
 export const createEvent = async (req, res) => {
     try {
-        const { name, description, startDate, endDate, eventType, address, joiningLink } = req.body;
+        const { name, description, startDate, endDate, time, eventType, address, joiningLink } = req.body;
         if (!req.file) {
             res.status(400).send('No file uploaded.');
             return;
@@ -40,6 +40,7 @@ export const createEvent = async (req, res) => {
                 eventType,
                 address,
                 joiningLink,
+                time,
                 backgroundImage: publicUrl
             })
             res.status(200).json({
@@ -58,7 +59,6 @@ export const getUpcomingEvents = async (req, res) => {
     try {
         const today = new Date();
         
-        // Fetch upcoming events
         const events = await EventModel.find({ endDate: { $gt: today } });
         
         const updatedEvents = await Promise.all(
@@ -78,6 +78,7 @@ export const getUpcomingEvents = async (req, res) => {
                     joiningLink: event.joiningLink,
                     address: event.address,
                     likes: event.likes,
+                    time: event.time,
                     peopleAttending: event.peopleAttending,
                     attending: event.attendingPeoples.includes(req.id),
                     attendees // List of attendee objects with name, ID, and profile picture
