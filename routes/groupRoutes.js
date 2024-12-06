@@ -1,5 +1,5 @@
 import express from 'express';
-import { addBackgroundPicture, addProfilePicture, approvePendingUser, createGroup, deleteSpecificGroup, getGroups, getGroupUsers, getJoinedGroupDetails, getSpecificGroup, joinGroup, likeGroup, removeUser, toggleGroupPrivacy, togglePin } from '../controller/groupController.js';
+import { addBackgroundPicture, addProfilePicture, approvePendingUser, createGroup, deleteSpecificGroup, getGroups, getGroupUsers, getJoinedGroupDetails, getLikedUsers, getSpecificGroup, joinGroup, likeGroup, removeUser, toggleGroupPrivacy, togglePin, updateGroupDetails } from '../controller/groupController.js';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import multer from 'multer';
@@ -17,9 +17,10 @@ const storage = new Storage({
 const bucketName = 'groups-data-101';
 export const bucket = storage.bucket(bucketName);
 
-groupRoutes.route('/').get(getGroups).post(upload.single('file'), createGroup).patch(joinGroup)
+groupRoutes.route('/').get(getGroups).post(upload.single('file'), createGroup).patch(joinGroup).put(updateGroupDetails)
 groupRoutes.route('/picture').patch(upload.single('file'), addProfilePicture).put(upload.single('file'), addBackgroundPicture)
 groupRoutes.route('/allusers').get(getGroupUsers)
+groupRoutes.route('/likedusers').get(getLikedUsers)
 groupRoutes.route('/joined-groups').get(getJoinedGroupDetails).patch(toggleGroupPrivacy).put(approvePendingUser).delete(removeUser)
 groupRoutes.route('/:id').get(getSpecificGroup).put(likeGroup).patch(togglePin).delete(deleteSpecificGroup)
 

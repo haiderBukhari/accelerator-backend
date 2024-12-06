@@ -115,6 +115,8 @@ export const getUserData = async (req, res) => {
             id: user._id,
             profilePicture: user.profilePicture,
             email: user.email,
+            location: user.location,
+            industry: user.industry,
             phoneNumber: user.phoneNumber,
             backgroundPicture: user.backgroundPicture,
             firstName: user.firstName,
@@ -161,12 +163,14 @@ export const updateProfileInformation = (req, res) => {
             data.lastName = req.body.lastName ?? data.lastName;
             data.bio = req.body.bio ?? data.bio;
             data.aboutMe = req.body.aboutMe ?? data.aboutMe;
+            data.location = req.body.location ?? data.location;
+            data.industry = req.body.industry ?? data.industry;
             await data.save();
             res.status(200).json({
                 message: 'Profile updated successfully.',
                 profilePicture: data.profilePicture,
                 firstName: data.firstName,
-                lastName: data.lastName
+                lastName: data.lastName,
             });
         });
 
@@ -184,6 +188,8 @@ export const updateProfile = async (req, res) => {
         data.lastName = req.body.lastName ?? data.lastName;
         data.bio = req.body.bio ?? data.bio;
         data.aboutMe = req.body.aboutMe ?? data.aboutMe;
+        data.industry = req.body.industry ?? data.industry;
+        data.location = req.body.location ?? data.location;
         await data.save();
         res.status(200).json({
             message: 'Profile updated successfully.',

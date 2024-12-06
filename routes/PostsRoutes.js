@@ -6,7 +6,7 @@ const PostsRoutes = express.Router();
 const multerStorage = multer.memoryStorage();
 const upload = multer({ storage: multerStorage });
 import { fileURLToPath } from 'url';
-import { getIndividualPersonPosts, getPosts, likePost, savePost, uploadPost, uploadText } from '../controller/postsController.js';
+import { getIndividualPersonPosts, getPostById, getPosts, likePost, savePost, uploadPost, uploadText } from '../controller/postsController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +22,7 @@ export const bucket = storage.bucket(bucketName);
 
 PostsRoutes.route('/').get(getPosts).post(uploadText).patch(likePost).put(savePost);
 PostsRoutes.route('/individual').get(getIndividualPersonPosts);
+PostsRoutes.route('/:id').get(getPostById)
 PostsRoutes.post('/upload', upload.single('file'), uploadPost);
 
 export default PostsRoutes;

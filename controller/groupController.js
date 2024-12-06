@@ -8,7 +8,6 @@ import { PostsModel } from "../models/Posts.js";
 export const createGroup = (req, res) => {
     try {
         const { name, contactNumber, email, talksAbout, description, isPrivate } = req.body;
-        console.log(isPrivate, typeof(isPrivate))
         if (!req.file) {
             res.status(400).send('No file uploaded.');
             return;
@@ -45,7 +44,7 @@ export const createGroup = (req, res) => {
                 .catch((err) => res.status(500).json({ message: 'Failed to create group', error: err }))
         });
 
-        stream.end(file.buffer); // Write file buffer to stream
+        stream.end(file.buffer); 
     } catch (err) {
         console.log(err.message)
         res.status(400).json({ message: 'Failed to create group', error: err })
@@ -573,6 +572,95 @@ export const getGroupUsers = async (req, res) => {
     }
 };
 
+export const getLikedUsers = async (req, res) => {
+    try {
+        const { groupId } = req.query;
+
+        // Debugging
+        console.log("Received groupId:", groupId);
+
+        // Validate groupId
+        if (!groupId || !mongoose.isValidObjectId(groupId)) {
+            return res.status(400).json({ message: 'Invalid or missing groupId' });
+        }
+
+        // Debugging: Validate group existence
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        // Aggregation pipeline
+        const likedUsers = await groups.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(groupId) } },
+            {
+                $lookup: {
+                    from: 'authentications',
+                    localField: 'likeBy',
+                    foreignField: '_id',
+                    as: 'likedUsersDetails'
+                }
+            },
+            { $unwind: "$likedUsersDetails" },
+            {
+                $project: {
+                    _id: "$likedUsersDetails._id",
+                    firstName: "$likedUsersDetails.firstName",
+                    lastName: "$likedUsersDetails.lastName",
+                    profilePicture: "$likedUsersDetails.profilePicture"
+                }
+            }
+        ]);
+
+        if (!likedUsers || likedUsers.length === 0) {
+            return res.status(404).json({ message: 'No users have liked this group' });
+        }
+
+        return res.status(200).json({
+            message: 'Liked users retrieved successfully',
+            likedUsers
+        });
+
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ message: 'Failed to retrieve liked users', error: err });
+    }
+};
+
+export const updateGroupDetails = async (req, res) => {
+    try {
+        const { groupId, name, contactNumber, email, talksAbout, description } = req.body;
+
+        // Validate the groupId
+        if (!mongoose.isValidObjectId(groupId)) {
+            return res.status(400).json({ message: "Invalid groupId" });
+        }
+
+        // Check if the group exists
+        const group = await groups.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Update group details
+        group.name = name || group.name;
+        group.contactNumber = contactNumber || group.contactNumber;
+        group.email = email || group.email;
+        group.talksAbout = talksAbout || group.talksAbout;
+        group.description = description || group.description;
+
+        // Save the updated group
+        const updatedGroup = await group.save();
+
+        res.status(200).json({
+            message: "Group details updated successfully",
+            group: updatedGroup,
+        });
+    } catch (error) {
+        console.error("Error updating group details:", error);
+        res.status(500).json({ message: "Failed to update group details", error });
+    }
+};
 
 export const getJoinedGroupDetails = async (req, res) => {
     try {

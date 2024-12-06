@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { NotificationsModel } from "../models/notificationModel.js";
 
 export const getFriendList = async (req, res) => {
-    const { currentPage, name } = req.query;
+    const { currentPage, name, location, industry } = req.query;
     const pageSize = 8;
     const skip = (currentPage - 1) * pageSize;
 
@@ -42,6 +42,7 @@ export const getFriendList = async (req, res) => {
             _id: { $ne: req.id },
         };
 
+        // Filter by name if provided
         if (name) {
             const nameParts = name.trim().split(' '); // Split the input by spaces
 
@@ -74,6 +75,21 @@ export const getFriendList = async (req, res) => {
             }
         }
 
+        // Filter by location if provided
+        if (location) {
+            query = {
+                ...query,
+                location: { $regex: new RegExp(location, 'i') }
+            };
+        }
+
+        // Filter by industry if provided
+        if (industry) {
+            query = {
+                ...query,
+                industry: { $regex: new RegExp(industry, 'i') }
+            };
+        }
 
         const documentList = await AuthenticationModel.countDocuments(query);
 
@@ -112,6 +128,7 @@ export const getFriendList = async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 };
+
 
 export const addFriend = async (req, res) => {
     const { id } = req.body;

@@ -120,7 +120,6 @@ export const getPosts = async (req, res) => {
                 }
             ]);
 
-            console.log(groupPosts)
             return res.status(200).json(groupPosts);
         }
         
@@ -178,6 +177,80 @@ export const getPosts = async (req, res) => {
 
 
         res.status(200).json(posts);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+export const getPostById = async (req, res) => {
+    try {
+        const postId = req.params.id; // Extract the post ID from the query parameters
+        const id = req.id; // User ID from the request
+        const { isOnlySavedPost } = req.query; // Extract query parameters
+
+        // Validate if postId is provided
+        if (!postId) {
+            return res.status(400).json({ message: "Post ID is required" });
+        }
+
+        // Fetch the single post based on the postId
+        const post = await PostsModel.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(postId), // Filter by the post ID
+                    ...(isOnlySavedPost === 'true' && { savedBy: new mongoose.Types.ObjectId(id) }) // If isOnlySavedPost is true, only include saved posts
+                }
+            },
+            {
+                $lookup: {
+                    from: 'authentications', // Lookup to fetch user info
+                    localField: 'owner',
+                    foreignField: '_id',
+                    as: 'userInfo'
+                }
+            },
+            { $unwind: '$userInfo' }, // Unwind userInfo to get the details
+            {
+                $lookup: {
+                    from: 'groups', // Include group details
+                    localField: 'group',
+                    foreignField: '_id',
+                    as: 'groupInfo'
+                }
+            },
+            { $unwind: { path: '$groupInfo', preserveNullAndEmptyArrays: true } }, // Unwind groupInfo, preserving null/empty arrays
+            {
+                $project: {
+                    _id: 1,
+                    text: 1,
+                    imageUrl: 1,
+                    videoUrl: 1,
+                    likes: 1,
+                    likeBy: 1,
+                    comments: 1,
+                    shares: 1,
+                    savedBy: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    owner: 1,
+                    group: 1,
+                    isPinedPost: 1,
+                    'userInfo.firstName': 1,
+                    'userInfo.lastName': 1,
+                    'userInfo.profilePicture': 1,
+                    'userInfo._id': 1,
+                    'groupInfo.name': { $ifNull: ['$groupInfo.name', ''] }, // If no group info, default to an empty string
+                }
+            }
+        ]);
+
+        // If no post is found, return a not found message
+        if (post.length === 0) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Return the post data
+        res.status(200).json(post[0]);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -256,6 +329,7 @@ export const savePost = async (req, res) => {
 export const getIndividualPersonPosts = async (req, res) => {
     try{
         const {id} = req.query;
+        console.log(id)
         if(!id) throw new Error('id is required');
         if (!mongoose.isValidObjectId(id)) {
             throw new Error("Invalid id format");
@@ -263,6 +337,7 @@ export const getIndividualPersonPosts = async (req, res) => {
         const posts = await PostsModel.find({ owner: id }).sort({ createdAt: -1 });
         res.status(200).json(posts);
     }catch (err) {
+        console.log(err.message)
         res.status(400).json({ message: err.message });
     }
 }
